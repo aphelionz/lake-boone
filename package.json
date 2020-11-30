@@ -1,6 +1,6 @@
 {
   "name": "cerebro",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -11,8 +11,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@octokit/rest": "^18.0.9",
-    "ipfs": "^0.52.2",
-    "orbit-db": "^0.26.0"
+    "@octokit/rest": "^18.0.9"
   }
 }
