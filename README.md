@@ -1,9 +1,8 @@
-# cerebro
+# Cerebro (cerebro-cli)
 > A novel recruiting tool using GitHub events.
 
-Finding capable developers is challenging. This tool starts with
-a simple heuristic - the ability to get a pull request (PR)
-merged given a sufficient amount of feedback, and filters from
+Finding capable developers is challenging. This tool starts with a simple heuristic - the ability
+to get a pull request (PR) merged given a sufficient amount of feedback, and filters from
 there.
 
 The flow is currently as follows:
@@ -13,7 +12,6 @@ _merge_ events on PRs that have a specified number of comments.
 3. For each PR:
   1. Check if the language is your target language
   2. Check if the author of the PR is looking for a job
-
 
 ## Table of Contents
 
@@ -29,10 +27,8 @@ _merge_ events on PRs that have a specified number of comments.
 
 You need, or may need:
 
-- [Node.js](https://nodejs.org). The [nvm](https://nvm.sh) tool
-  works well for this.
-- Optional, but highly recommended: A [GH personal token] with
-  default permissions
+- [Node.js](https://nodejs.org). The [nvm](https://nvm.sh) tool works well for this.
+- Optional, but highly recommended: A [GH personal token] with default permissions
 - Optional: [Docker] and [Docker Compose].
 
 [GH personal token]: https://github.com/settings/tokens
@@ -41,13 +37,11 @@ You need, or may need:
 
 ## Usage
 
-**Cerebro** can be run in a number of different ways, always
-configured by environment variables.
+Cerebro can be run in a number of different ways, always configured by environment variables.
 
 ### Using npx
 
-You can skip the whole installation process altogether and just
-run **cerebro** using `npx`
+You can skip the whole installation process altogether and just run Cerebro using `npx`
 
 ```bash
 GH_TOKEN=[insert GH token here] \
