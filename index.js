@@ -1,36 +1,32 @@
 const { Octokit } = require("@octokit/rest");
 
-// Environment variable stuff
-// TODO: Validation
+// Initialization
 const auth = process.env.GH_TOKEN || null
 const parsedThreshold = parseInt(process.env.COMMENT_THRESHOLD, 10)
 const commentThreshold = parsedThreshold ? parsedThreshold : 3
-// TODO: in the list of GH languages
+const showNonHireable = process.env.SHOW_NON_HIREABLE ? true : false
 const targetLanguages = process.env.LANGUAGES.split(',').map(l => l.toLowerCase())
 if (targetLanguages.length === 0)
   throw new Error("Please specify at least one programming language using LANGUAGES")
 
 const octokit = new Octokit({ auth });
 
-// Listen to the GitHub public events firehose
-// We're looking for merged pull requests with a number
-// of review comments above the threshold
-// We can add better bot detections if there's an issue
-// TODO: This is a blunt instrument and produces a lot of duplicate
-// results. A smarter seek would ensure that each GH event is only
-// processed once
-async function seek(language) {
-  const per_page = 100
-  const data = (await octokit.activity.listPublicEvents({ per_page })).data
 
-  // This works well as the _first_ slice here because
-  // it's the most specific and harsh filter.
-  const results = data
+// The primary seek function
+// TODO: This is a blunt instrument and produces a lot of duplicate results.
+// A smarter seek would ensure that each GH event is only processed once
+async function seek() {
+  const per_page = 100
+  const eventRequest = await octokit.activity.listPublicEvents({ per_page })
+
+  // This works well as the _first_ slice here because it's the harshest filter.
+  const results = eventRequest.data
     .filter(d => d.type === "PullRequestEvent")
     .filter(p => p.payload.action === 'closed')
     .map(p => p.payload.pull_request)
     .filter(pr => pr.merged)
     .filter(pr => pr.review_comments >= commentThreshold)
+    // We can add better bot detections it becomes an issue
     .filter(pr => pr.user.login.indexOf('bot') === -1)
     .map(pr => ({
       prHtmlUrl: pr.html_url,
@@ -38,26 +34,39 @@ async function seek(language) {
       username: pr.user.login
     }))
 
-  // SPLIT people - hireable, not hireable
+
+  // FIXME: I hate having to switch idioms here. Would be nice to just continue
+  // down the filter + map chain, but oh well: async / await!
+  // Perhaps utilize the graphQL api at _this_ point?
   for (let i = 0; i < results.length; i++) {
     const { languagesUrl, prHtmlUrl, username } = results[i]
 
-    // The dominant language in the repo should be first or second in the list
     const repoRequest = await octokit.request(`GET ${languagesUrl}`)
     const repoLanguages = Object.keys(repoRequest.data).map(l => l.toLowerCase())
     const includedLangs = []
     for (const lang of targetLanguages) {
+      // The dominant language in the repo should be first or second in the list
       if (repoLanguages[0] === lang || repoLanguages[1] === lang) includedLangs.push(lang)
     }
     if (includedLangs.length === 0) continue
 
+    // TODO: Refactor to "output" function of some sort
     const userData = (await octokit.users.getByUsername({ username })).data
     if (userData.hireable) {
-      console.log(`${includedLangs} ✅ ${username} created ${prHtmlUrl} and may be looking for a job`)
+      console.log(`${includedLangs} ✅ ${username} created ${prHtmlUrl} and may be job seeking`)
+      if (userData.company)
+        console.log(`  🏢 ${username} currently works at: ${userData.company}`)
       if (userData.twitter_username)
-        console.log(`  🐦 ${username} can be found on twitter: ${userData.twitter_username}`)
+        console.log(`  🐦 ${username} can be found on Twitter: ${userData.twitter_username}`)
+      if (userData.email)
+        console.log(`  📧 ${username} can be reached via: ${userData.email}`)
+      if (userData.location)
+        console.log(`  📍 ${username} is located in: ${userData.location}`)
+      if (userData.blog)
+        console.log(`  🕸️  ${username}wants you to click: ${userData.blog}`)
     } else {
-      console.log(`${includedLangs} 🕵️  ${username} created ${prHtmlUrl}`)
+      if(showNonHireable)
+        console.log(`${includedLangs} 🕵️  ${username} created ${prHtmlUrl}`)
     }
   }
 }

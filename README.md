@@ -17,15 +17,12 @@ _merge_ events on PRs that have a specified number of comments.
 
 - [Prerequisites](#prerequisites)
 - [Usage](#usage)
-- [Configuration](#configuration)
 - [Contributing](#contributing)
 - [Future Work](#future-work)
 - [Maintainers](#maintainers)
 - [License](#license)
 
 ### Prerequisites
-
-You need, or may need:
 
 - [Node.js](https://nodejs.org). The [nvm](https://nvm.sh) tool works well for this.
 - Optional, but highly recommended: A [GH personal token] with default permissions
@@ -39,7 +36,16 @@ You need, or may need:
 
 Cerebro can be run in a number of different ways, always configured by environment variables.
 
-### Using npx
+### Configuration
+
+The following environment variables are available:
+
+- `GH_TOKEN`: Your GitHub personal authentication token.
+- `LANGUAGES`: Comma separated list of the target languages you're looking for
+- `COMMENT_THRESHOLD`: Show PRs with review comments greater than or equal to this number
+- `SHOW_NON_HIREABLE`: Show applicants that are not explicitly marked as hireable.
+
+### Using `npx`
 
 You can skip the whole installation process altogether and just run Cerebro using `npx`
 
@@ -71,13 +77,6 @@ services:
       LANGUAGES: rust,solidity
 ```
 
-## Configuration
-
-The following environment variables are available:
-
-- `GH_TOKEN`: Your GitHub personal authentication token.
-- `LANGUAGES`: Comma separated list of the target languages you're looking for
-
 ## Contributing
 
 Issues and PRs accepted. More info coming soon.
@@ -102,15 +101,18 @@ GitHub API v4 does not support listening to the public event timeline.
 1. Better bot detection
     1. Bot detection really happens in two places, here and in the use of `review_comments`
 2. English proficiency
-    1. really needs a manual overview until we find / create a good enough tool for this
-    2. ideally would be any language
-3. Looking for a job false negatives
-    1. hireable is either null (false) or true. However null is the default because GH jobs is
+    1. Really needs a manual overview until we find / create a good enough tool for this
+    2. Ideally would be any proficiency in language
+3. "Looking for a job" false negatives, and false positives too
+    1. `hireable` is either null (false) or true. However null is the default because GH jobs is
     opt-in. So we only make a note of this for now.
-4. API rate limiting handling
-    1. So far the script just runs every 2 seconds, which is "fine." It could be smarter
-5. IPFS + OrbitDB integration?
+4. Smarter seek function
+    1. API rate limiting handling
+    2. Individual Event handling
+5. IPFS + OrbitDB integration? Or at least _some_ database
 6. Readline and raw stdin integration to make a proper UI (or just make an API + website)
+7. Environment variable validation
+    1. Is it possible to get the full list of supported GH languages?
 
 ## Maintainers
 
