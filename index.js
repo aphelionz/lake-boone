@@ -5,6 +5,7 @@ const auth = process.env.GH_TOKEN || null
 const parsedThreshold = parseInt(process.env.COMMENT_THRESHOLD, 10)
 const commentThreshold = parsedThreshold ? parsedThreshold : 3
 const showNonHireable = process.env.SHOW_NON_HIREABLE ? true : false
+const changeSetThreshold = process.env.CHANGESET_THRESHOLD || 5432
 const targetLanguages = process.env.LANGUAGES.split(',').map(l => l.toLowerCase())
 if (targetLanguages.length === 0)
   throw new Error("Please specify at least one programming language using LANGUAGES")
@@ -26,6 +27,8 @@ async function seek() {
     .map(p => p.payload.pull_request)
     .filter(pr => pr.merged)
     .filter(pr => pr.review_comments >= commentThreshold)
+    // Make sure the PRs arent too big
+    .filter(pr => (pr.additions + pr.deletions) <= changeSetThreshold)
     // We can add better bot detections it becomes an issue
     .filter(pr => pr.user.login.indexOf('bot') === -1)
     .map(pr => ({
