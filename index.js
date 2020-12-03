@@ -66,7 +66,7 @@ async function seek() {
       if (userData.location)
         console.log(`  📍 ${username} is located in: ${userData.location}`)
       if (userData.blog)
-        console.log(`  🕸️  ${username}wants you to click: ${userData.blog}`)
+        console.log(`  🕸️  ${username} wants you to click: ${userData.blog}`)
     } else {
       if(showNonHireable)
         console.log(`${includedLangs} 🕵️  ${username} created ${prHtmlUrl}`)
