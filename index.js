@@ -74,7 +74,7 @@ async function seek() {
   }
 }
 
-const seekInterval = setInterval(seek, 2000)
+const seekInterval = setInterval(seek, 2500)
 
 // Exit cleanly on SIGINT
 process.on('SIGINT', function(e) {
