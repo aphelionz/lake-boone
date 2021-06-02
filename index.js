@@ -1,4 +1,5 @@
-const { Octokit } = require("@octokit/rest");
+const { Octokit } = require("@octokit/rest")
+const { candidatesFound } = require('./metrics')
 
 // Initialization
 const auth = process.env.GH_TOKEN || null
@@ -56,6 +57,7 @@ async function seek() {
     // TODO: Refactor to "output" function of some sort
     const userData = (await octokit.users.getByUsername({ username })).data
     if (userData.hireable) {
+      candidatesFound.inc()
       console.log(`${includedLangs} ✅ ${username} created ${prHtmlUrl} and may be job seeking`)
       if (userData.company)
         console.log(`  🏢 ${username} currently works at: ${userData.company}`)
@@ -68,6 +70,7 @@ async function seek() {
       if (userData.blog)
         console.log(`  🕸️  ${username} wants you to click: ${userData.blog}`)
     } else {
+      candidatesFound.inc()
       if(showNonHireable)
         console.log(`${includedLangs} 🕵️  ${username} created ${prHtmlUrl}`)
     }
