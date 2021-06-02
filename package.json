@@ -4,8 +4,8 @@
   "description": "",
   "main": "./src/index.js",
   "scripts": {
-    "start": "node index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node ./src/index.js",
+    "test": "nyc mocha"
   },
   "keywords": [],
   "author": "",
@@ -13,5 +13,9 @@
   "dependencies": {
     "@octokit/rest": "^18.0.9",
     "prom-client": "^13.1.0"
+  },
+  "devDependencies": {
+    "mocha": "^8.4.0",
+    "nyc": "^15.1.0"
   }
 }
