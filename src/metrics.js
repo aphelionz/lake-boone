@@ -1,34 +1,33 @@
 const client = require('prom-client')
 const http = require('http')
-const url = require('url')
+
+let server
 
 const register = new client.Registry()
-
-register.setDefaultLabels({
-  app: 'cerebro-cli'
-})
-
-client.collectDefaultMetrics({ register })
 const candidatesFound = new client.Counter({
   name: 'candidates_found',
   help: 'Count of candidates found by Cerebro so far',
 });
+client.collectDefaultMetrics({ register })
+register.setDefaultLabels({ app: 'cerebro' })
 register.registerMetric(candidatesFound)
 
-const server = http.createServer(async (req, res) => {
-  const route = url.parse(req.url).pathname
-  let metrics
-
-  if (route === '/metrics') {
+function start({ port = 9100 }) {
+  server = http.createServer(async (req, res) => {
     res.setHeader('Content-Type', register.contentType)
-    metrics = await register.metrics()
-  }
+    let metrics = await register.metrics()
+    res.end(metrics)
+  })
 
-  res.end(metrics)
-})
+  server.listen(port)
+}
 
-server.listen(8080)
+function stop() {
+  server.close()
+}
 
 module.exports = {
-  candidatesFound
+  metrics: [candidatesFound],
+  start,
+  stop
 }
