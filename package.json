@@ -5,7 +5,8 @@
   "main": "./src/index.js",
   "scripts": {
     "start": "node ./src/index.js",
-    "test": "nyc mocha"
+    "test": "mocha",
+    "coverage": "nyc npm run test"
   },
   "keywords": [],
   "author": "",
