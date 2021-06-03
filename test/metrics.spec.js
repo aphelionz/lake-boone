@@ -1,12 +1,12 @@
 const assert = require('assert')
 const http = require('http');
 
-const { metrics, start, stop } = require('../src/metrics')
+const metrics = require('../src/metrics')
 const port = 63429
 
 describe("Metrics", function() {
-  before(async () => {
-    await start({ port })
+  before(() => {
+    metrics.start({ port })
   })
 
   it(`displays Prometheus-compatible metrics on random port ${port}`, (done) => {
@@ -29,10 +29,10 @@ describe("Metrics", function() {
   })
 
   it(`exports custom metrics in the module.exports.metrics array`, () => {
-    assert.strictEqual(metrics.length, 1)
+    assert(metrics.custom.candidatesFound)
   })
 
-  after(async () => {
-    await stop()
+  after(() => {
+    metrics.stop()
   })
 })

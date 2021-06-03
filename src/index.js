@@ -1,5 +1,5 @@
 const { Octokit } = require("@octokit/rest")
-const { candidatesFound } = require('./metrics')
+const metrics = require('./metrics')
 
 // Initialization
 const auth = process.env.GH_TOKEN || null
@@ -57,7 +57,7 @@ async function seek() {
     // TODO: Refactor to "output" function of some sort
     const userData = (await octokit.users.getByUsername({ username })).data
     if (userData.hireable) {
-      candidatesFound.inc()
+      metrics.custom.candidatesFound.inc()
       console.log(`${includedLangs} ✅ ${username} created ${prHtmlUrl} and may be job seeking`)
       if (userData.company)
         console.log(`  🏢 ${username} currently works at: ${userData.company}`)
@@ -70,19 +70,26 @@ async function seek() {
       if (userData.blog)
         console.log(`  🕸️  ${username} wants you to click: ${userData.blog}`)
     } else {
-      candidatesFound.inc()
-      if(showNonHireable)
+      if(showNonHireable) {
+        metrics.custom.candidatesFound.inc()
         console.log(`${includedLangs} 🕵️  ${username} created ${prHtmlUrl}`)
+      }
     }
   }
 }
 
-const seekInterval = setInterval(seek, 2500)
+// Authenticated GitHub requests can be made 5000 times per
+// hour, which means one request can be made every 714.3ms
+// However, the public events feed isn't that busy so we just
+// round up to 1000ms or 1 second.
+const seekInterval = setInterval(seek, 1000)
+metrics.start({ port: 9100 })
 
 // Exit cleanly on SIGINT
 process.on('SIGINT', function(e) {
   console.log("Cleanly shutting down")
   // TODO: emit stats
   clearInterval(seekInterval)
+  metrics.stop()
   process.exit()
 });

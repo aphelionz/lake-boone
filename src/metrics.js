@@ -20,6 +20,7 @@ function start({ port = 9100 }) {
   })
 
   server.listen(port)
+  console.log(`Metrics running at http://127.0.0.1:${port}`)
 }
 
 function stop() {
@@ -27,7 +28,7 @@ function stop() {
 }
 
 module.exports = {
-  metrics: [candidatesFound],
+  custom: { candidatesFound },
   start,
   stop
 }
