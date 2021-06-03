@@ -15,14 +15,15 @@ const octokit = new Octokit({ auth });
 
 
 // The primary seek function
-// TODO: This is a blunt instrument and produces a lot of duplicate results.
-// A smarter seek would ensure that each GH event is only processed once
+// Uses a cursor based on the last event id, and only fetches those greater.
+let cursor = 0
 async function seek() {
   const per_page = 100
   const eventRequest = await octokit.activity.listPublicEvents({ per_page })
 
   // This works well as the _first_ slice here because it's the harshest filter.
   const results = eventRequest.data
+    .filter(d => parseInt(d.id, 10) > cursor)
     .filter(d => d.type === "PullRequestEvent")
     .filter(p => p.payload.action === 'closed')
     .map(p => p.payload.pull_request)
@@ -38,6 +39,7 @@ async function seek() {
       username: pr.user.login
     }))
 
+  cursor = eventRequest.data.map(e => parseInt(e.id, 10))[per_page - 100]
 
   // FIXME: I hate having to switch idioms here. Would be nice to just continue
   // down the filter + map chain, but oh well: async / await!
