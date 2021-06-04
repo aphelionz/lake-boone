@@ -44,7 +44,7 @@ process.on('SIGINT', function (e) {
   metrics.stop()
 
   console.log('stopping seeker...')
-  seeker.off('candidateFound')
+  seeker.events.off('candidateFound', output.console)
   seeker.stop()
   process.exit()
 })
