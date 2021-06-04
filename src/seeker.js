@@ -1,10 +1,9 @@
-const { Octokit } = require("@octokit/rest")
+const { Octokit } = require('@octokit/rest')
 const EventEmitter = require('events')
 
 const events = new EventEmitter()
 let seekInterval
 let octokit
-let per_page = 100
 let cursor = 0
 
 // Authenticated GitHub requests can be made 5000 times per
@@ -22,8 +21,8 @@ function start (auth, {
 } = {}) {
   const interval = auth ? 1000 : 60000
   octokit = new Octokit({ auth })
-  seekInterval = setInterval(function seek () {
-    octokit.activity.listPublicEvents({ per_page })
+  seekInterval = setInterval((function seek () {
+    octokit.activity.listPublicEvents({ per_page: 100 })
       .then(res => {
         return firstFilter(res.data, { commentThreshold, changeSetThreshold })
       })
@@ -31,17 +30,17 @@ function start (auth, {
       .catch(console.error)
 
     return seek
-  }(), interval)
+  }()), interval)
 }
 
 function stop () { clearInterval(seekInterval) }
 
-function firstFilter(ghEvents, { commentThreshold, changeSetThreshold }) {
+function firstFilter (ghEvents, { commentThreshold, changeSetThreshold }) {
   const uniqueEvents = ghEvents.filter(d => parseInt(d.id, 10) > cursor)
   events.emit('_debug.uniqueEvents', uniqueEvents.length)
 
   const suitablePRs = uniqueEvents
-    .filter(d => d.type === "PullRequestEvent")
+    .filter(d => d.type === 'PullRequestEvent')
     .filter(p => p.payload.action === 'closed')
     .map(p => p.payload.pull_request)
     .filter(pr => pr.merged)
@@ -53,17 +52,17 @@ function firstFilter(ghEvents, { commentThreshold, changeSetThreshold }) {
   events.emit('_debug.suitablePRs', suitablePRs.length)
 
   const filteredEvents = suitablePRs.map(pr => ({
-      prHtmlUrl: pr.html_url,
-      languagesUrl: pr.url.replace(/pulls(.*)$/g, "languages"),
-      username: pr.user.login
-    }))
+    prHtmlUrl: pr.html_url,
+    languagesUrl: pr.url.replace(/pulls(.*)$/g, 'languages'),
+    username: pr.user.login
+  }))
   events.emit('_debug.filteredEvents', filteredEvents.length)
 
-  cursor = ghEvents.map(e => parseInt(e.id, 10))[per_page - 100]
+  cursor = ghEvents.map(e => parseInt(e.id, 10)).sort()[ghEvents.length - 1]
   return Promise.resolve(filteredEvents)
 }
 
-async function secondFilter(results, { targetLanguages, showNonHireable }) {
+async function secondFilter (results, { targetLanguages, showNonHireable }) {
   for (let i = 0; i < results.length; i++) {
     const { languagesUrl, prHtmlUrl, username } = results[i]
 
@@ -79,18 +78,11 @@ async function secondFilter(results, { targetLanguages, showNonHireable }) {
     // TODO: Refactor to "output" function of some sort
     const candidate = (await octokit.users.getByUsername({ username })).data
     if (candidate.hireable || showNonHireable) {
-      events.emit('candidateFound', candidate)
-      // console.log(`${includedLangs} ✅ ${username} created ${prHtmlUrl} and may be job seeking`)
-      // if (userData.company)
-      //   console.log(`  🏢 ${username} currently works at: ${userData.company}`)
-      // if (userData.twitter_username)
-      //   console.log(`  🐦 ${username} can be found on Twitter: ${userData.twitter_username}`)
-      // if (userData.email)
-      //   console.log(`  📧 ${username} can be reached via: ${userData.email}`)
-      // if (userData.location)
-      //   console.log(`  📍 ${username} is located in: ${userData.location}`)
-      // if (userData.blog)
-      //   console.log(`  🕸️  ${username} wants you to click: ${userData.blog}`)
+      events.emit('candidateFound', {
+        includedLangs,
+        prHtmlUrl,
+        ...candidate
+      })
     }
   }
 }
