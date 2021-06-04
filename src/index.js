@@ -32,7 +32,12 @@ seeker.events.on('_debug.uniqueEvents', (count) => {
 seeker.events.on('_debug.suitablePRs', (count) => {
   metrics.custom.suitablePRs.inc(count)
 })
-seeker.events.on('candidateFound', output.console)
+
+function outputCandidate (candidate) {
+  output.console(candidate)
+  metrics.custom.candidatesFound.inc(1)
+}
+seeker.events.on('candidateFound', outputCandidate)
 
 // Start Prometheus metrics server on the specified port
 metrics.start({ port: 9100 })
@@ -44,7 +49,7 @@ process.on('SIGINT', function (e) {
   metrics.stop()
 
   console.log('stopping seeker...')
-  seeker.events.off('candidateFound', output.console)
+  seeker.events.off('candidateFound', outputCandidate)
   seeker.stop()
   process.exit()
 })
