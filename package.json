@@ -5,7 +5,7 @@
   "main": "./src/index.js",
   "scripts": {
     "coverage": "nyc npm run test",
-    "lint": "standard && markdownlint README.md",
+    "lint": "standard && markdownlint *.md",
     "start": "node ./src/index.js",
     "test": "mocha"
   },
