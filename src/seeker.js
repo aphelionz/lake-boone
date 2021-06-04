@@ -2,8 +2,6 @@ const { Octokit } = require('@octokit/rest')
 const EventEmitter = require('events')
 const events = new EventEmitter()
 
-let commentThreshold
-let changeSetThreshold
 let seekInterval
 let octokit
 let cursor = 0
@@ -53,10 +51,10 @@ function start (auth, {
   // 5000 authenticated requests/hour (rounded up) or 60 for non-auth :(
   // TODO: Look into getting this from Octokit somehow? GH headers don't provide.
   const interval = auth ? 1000 : 60000
-  if(!octokit) { octokit = new Octokit({ auth }) }
+  if (!octokit) { octokit = new Octokit({ auth }) }
 
   seekInterval = setInterval((function seek () {
-    const rawEvents = octokit.activity.listPublicEvents({ per_page: 100 })
+    octokit.activity.listPublicEvents({ per_page: 100 })
       .then(res => res.data)
       .then(getNewEvents)
       .then(newEvents => getSuitablePRs(newEvents, { commentThreshold, changeSetThreshold }))
