@@ -36,21 +36,7 @@ describe('Seeker', function() {
     seeker.stop()
   })
 
-  it('emits the _debug.cursorUpdated event', (done) => {
-    const scope = nock('https://api.github.com')
-      .get('/events?per_page=100')
-      .reply(200, [{ id: 2 }])
-
-    seeker.start()
-    events.on('_debug.cursorUpdated', function cb(cursor) {
-      assert.strictEqual(cursor, 2)
-      done()
-      events.off('_debug.cursorUpdated', cb)
-    })
-    seeker.stop()
-  })
-
-  it('emits the _debug.firstFilter event', (done) => {
+  it('emits the _debug.suitablePRs event', (done) => {
     const scope = nock('https://api.github.com')
       .get('/events?per_page=100')
       .reply(200,[{
@@ -73,10 +59,10 @@ describe('Seeker', function() {
       }])
 
     seeker.start(null, { targetLanguages: ['java'] })
-    events.on('_debug.filteredEvents', function cb (filteredEvents) {
-      assert.strictEqual(filteredEvents, 1)
-      events.off('_debug.filteredEvents', cb)
+    events.on('_debug.suitablePRs', function cb(count) {
+      assert.strictEqual(count, 1)
       done()
+      events.off('_debug.suitablePRs', cb)
     })
     seeker.stop()
   })
