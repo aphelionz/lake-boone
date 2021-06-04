@@ -4,12 +4,18 @@ const http = require('http')
 let server
 
 const register = new client.Registry()
+register.setDefaultLabels({ app: 'cerebro' })
+client.collectDefaultMetrics({ register })
+
+const uniqueEventsProcessed = new client.Counter({
+  name: 'unique_events_processed',
+  help: 'Number of unique events processed by Cerebro',
+})
+register.registerMetric(uniqueEventsProcessed)
 const candidatesFound = new client.Counter({
   name: 'candidates_found',
   help: 'Count of candidates found by Cerebro so far',
-});
-client.collectDefaultMetrics({ register })
-register.setDefaultLabels({ app: 'cerebro' })
+})
 register.registerMetric(candidatesFound)
 
 function start({ port = 9100 }) {
@@ -28,7 +34,10 @@ function stop() {
 }
 
 module.exports = {
-  custom: { candidatesFound },
+  custom: {
+    candidatesFound,
+    uniqueEventsProcessed
+  },
   start,
   stop
 }
