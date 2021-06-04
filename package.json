@@ -5,7 +5,7 @@
   "main": "./src/index.js",
   "scripts": {
     "coverage": "nyc npm run test",
-    "lint": "standard",
+    "lint": "standard && markdownlint README.md",
     "start": "node ./src/index.js",
     "test": "mocha"
   },
@@ -22,6 +22,8 @@
     "prom-client": "^13.1.0"
   },
   "devDependencies": {
+    "markdownlint": "^0.23.1",
+    "markdownlint-cli": "^0.27.1",
     "mocha": "^8.4.0",
     "nock": "^13.1.0",
     "nyc": "^15.1.0",
