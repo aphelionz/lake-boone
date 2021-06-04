@@ -77,6 +77,7 @@ async function secondFilter (results, { targetLanguages, showNonHireable }) {
     const includedLangs = []
     for (const lang of targetLanguages) {
       // The dominant language in the repo should be first or second in the list
+      // TODO: Should be the languages in the PR, not the repo.
       if (repoLanguages[0] === lang || repoLanguages[1] === lang) includedLangs.push(lang)
     }
     if (includedLangs.length === 0) continue
