@@ -2,3 +2,4 @@ test
 .nyc_output
 .github
 Dockerfile
+.env
