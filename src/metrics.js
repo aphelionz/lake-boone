@@ -12,6 +12,11 @@ const uniqueEventsProcessed = new client.Counter({
   help: 'Number of unique events processed by Cerebro',
 })
 register.registerMetric(uniqueEventsProcessed)
+const suitablePRs = new client.Counter({
+  name: 'suitable_pull_requests_found',
+  help: 'Number of suitable pull requests by Cerebro',
+})
+register.registerMetric(suitablePRs)
 const candidatesFound = new client.Counter({
   name: 'candidates_found',
   help: 'Count of candidates found by Cerebro so far',
@@ -36,7 +41,8 @@ function stop() {
 module.exports = {
   custom: {
     candidatesFound,
-    uniqueEventsProcessed
+    uniqueEventsProcessed,
+    suitablePRs
   },
   start,
   stop

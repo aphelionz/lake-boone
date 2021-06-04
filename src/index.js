@@ -30,6 +30,9 @@ seeker.start(
 seeker.events.on('_debug.uniqueEvents', (count) => {
   metrics.custom.uniqueEventsProcessed.inc(count)
 })
+seeker.events.on('_debug.suitablePRs', (count) => {
+  metrics.custom.suitablePRs.inc(count)
+})
 seeker.events.on('candidateFound', output.console)
 
 // Start Prometheus metrics server on the specified port

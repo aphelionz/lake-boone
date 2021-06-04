@@ -40,7 +40,7 @@ function firstFilter(ghEvents, { commentThreshold, changeSetThreshold }) {
   const uniqueEvents = ghEvents.filter(d => parseInt(d.id, 10) > cursor)
   events.emit('_debug.uniqueEvents', uniqueEvents.length)
 
-  const filteredEvents = uniqueEvents
+  const suitablePRs = uniqueEvents
     .filter(d => d.type === "PullRequestEvent")
     .filter(p => p.payload.action === 'closed')
     .map(p => p.payload.pull_request)
@@ -50,17 +50,16 @@ function firstFilter(ghEvents, { commentThreshold, changeSetThreshold }) {
     .filter(pr => (pr.additions + pr.deletions) <= changeSetThreshold)
     // We can add better bot detections it becomes an issue
     .filter(pr => pr.user.login.indexOf('bot') === -1)
-    .map(pr => ({
+  events.emit('_debug.suitablePRs', suitablePRs.length)
+
+  const filteredEvents = suitablePRs.map(pr => ({
       prHtmlUrl: pr.html_url,
       languagesUrl: pr.url.replace(/pulls(.*)$/g, "languages"),
       username: pr.user.login
     }))
-
   events.emit('_debug.filteredEvents', filteredEvents.length)
 
   cursor = ghEvents.map(e => parseInt(e.id, 10))[per_page - 100]
-  events.emit('_debug.cursorUpdated', cursor)
-
   return Promise.resolve(filteredEvents)
 }
 
