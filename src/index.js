@@ -13,16 +13,15 @@ const {
 } = process.env
 
 const targetLanguages = LANGUAGES.split(',').map(l => l.toLowerCase())
-if (targetLanguages.length === 0)
-  throw new Error("Please specify at least one programming language using LANGUAGES")
+if (targetLanguages.length === 0) { throw new Error('Please specify at least one programming language using LANGUAGES') }
 
 // Start our GitHub events seeker
 seeker.start(
-  auth = GH_TOKEN ? GH_TOKEN : null,
+  GH_TOKEN || null,
   {
     parsedThreshold: isNaN(parseInt(COMMENT_THRESHOLD)) ? parseInt(COMMENT_THRESHOLD) : 3,
-    showNonHireable: SHOW_NON_HIREABLE ? SHOW_NON_HIREABLE : false,
-    changeSetThreshold: process.env.CHANGESET_THRESHOLD || 5432,
+    showNonHireable: SHOW_NON_HIREABLE || false,
+    changeSetThreshold: CHANGESET_THRESHOLD || 5432,
     targetLanguages
   }
 )
@@ -40,7 +39,7 @@ metrics.start({ port: 9100 })
 
 // Exit cleanly on SIGINT
 // TODO: Maybe emit stats?
-process.on('SIGINT', function(e) {
+process.on('SIGINT', function (e) {
   console.log('stopping metrics...')
   metrics.stop()
 
@@ -48,4 +47,4 @@ process.on('SIGINT', function(e) {
   seeker.off('candidateFound')
   seeker.stop()
   process.exit()
-});
+})
