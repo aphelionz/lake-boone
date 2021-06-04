@@ -4,7 +4,8 @@
 
 Finding capable developers is challenging. This tool starts with a simple
 heuristic - the ability to get a pull request (PR) merged given a sufficient
-amount of feedback, and filters from there.
+amount of feedback, and filters from there. _Credit to
+[@sequoia](https://github.com/sequoia) for this heuristic._
 
 The flow is currently as follows:
 
