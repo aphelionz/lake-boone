@@ -35,7 +35,7 @@ seeker.events.on('_debug.suitablePRs', (count) => {
 
 function outputCandidate (candidate) {
   output.console(candidate)
-  metrics.custom.candidatesFound.inc(1)
+  metrics.custom.candidatesFound.labels({ lang: candidate.includedLangs[0] }).inc(1)
 }
 seeker.events.on('candidateFound', outputCandidate)
 
