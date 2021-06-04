@@ -19,7 +19,8 @@ const suitablePRs = new client.Counter({
 register.registerMetric(suitablePRs)
 const candidatesFound = new client.Counter({
   name: 'candidates_found',
-  help: 'Count of candidates found by Cerebro so far'
+  help: 'Count of candidates found by Cerebro so far',
+  labelNames: ['lang']
 })
 register.registerMetric(candidatesFound)
 
