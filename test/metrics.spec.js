@@ -32,6 +32,8 @@ describe('Metrics', function () {
 
   it('exports custom metrics in the module.exports.metrics array', () => {
     assert(metrics.custom.candidatesFound)
+    assert(metrics.custom.uniqueEventsProcessed)
+    assert(metrics.custom.suitablePRs)
   })
 
   it('shows language-specific metrics with Prometheus labels', () => {
