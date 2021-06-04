@@ -27,7 +27,7 @@ describe('Seeker', function () {
       .get('/events?per_page=100')
       .reply(200, [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }])
 
-    seeker.start()
+    seeker.start('non-null auth')
     events.on('_debug.uniqueEvents', function cb (eventCount) {
       assert.strictEqual(eventCount, 4)
       done()
