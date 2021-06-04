@@ -1,5 +1,6 @@
 const metrics = require('./metrics')
 const seeker = require('./seeker')
+const output = require('./output')
 
 // Initialization
 // TODO: Validate these
@@ -26,14 +27,22 @@ seeker.start(
   }
 )
 
+seeker.events.on('_debug.uniqueEvents', (count) => {
+  metrics.custom.uniqueEventsProcessed.inc(count)
+})
+seeker.events.on('candidateFound', output.console)
+
 // Start Prometheus metrics server on the specified port
 metrics.start({ port: 9100 })
 
 // Exit cleanly on SIGINT
 // TODO: Maybe emit stats?
 process.on('SIGINT', function(e) {
-  console.log("Cleanly shutting down")
+  console.log('stopping metrics...')
   metrics.stop()
-  // seeker.stop()
+
+  console.log('stopping seeker...')
+  seeker.off('candidateFound')
+  seeker.stop()
   process.exit()
 });

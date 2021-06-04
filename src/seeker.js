@@ -25,7 +25,6 @@ function start (auth, {
   seekInterval = setInterval(function seek () {
     octokit.activity.listPublicEvents({ per_page })
       .then(res => {
-        events.emit('_debug.rawEvents', res.data.length)
         return firstFilter(res.data, { commentThreshold, changeSetThreshold })
       })
       .then((data) => secondFilter(data, { targetLanguages, showNonHireable }))
@@ -38,7 +37,10 @@ function start (auth, {
 function stop () { clearInterval(seekInterval) }
 
 function firstFilter(ghEvents, { commentThreshold, changeSetThreshold }) {
-  const filteredEvents = ghEvents.filter(d => parseInt(d.id, 10) > cursor)
+  const uniqueEvents = ghEvents.filter(d => parseInt(d.id, 10) > cursor)
+  events.emit('_debug.uniqueEvents', uniqueEvents.length)
+
+  const filteredEvents = uniqueEvents
     .filter(d => d.type === "PullRequestEvent")
     .filter(p => p.payload.action === 'closed')
     .map(p => p.payload.pull_request)

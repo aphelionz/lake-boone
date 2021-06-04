@@ -25,13 +25,13 @@ describe('Seeker', function() {
   it('emits the _debug.rawEvents event', (done) => {
     const scope = nock('https://api.github.com')
       .get('/events?per_page=100')
-      .reply(200, [{}, {}, {}, {}])
+      .reply(200, [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }])
 
     seeker.start()
-    events.on('_debug.rawEvents', function cb(eventCount) {
+    events.on('_debug.uniqueEvents', function cb(eventCount) {
       assert.strictEqual(eventCount, 4)
       done()
-      events.off('_debug.rawEvents', cb)
+      events.off('_debug.uniqueEvents', cb)
     })
     seeker.stop()
   })
