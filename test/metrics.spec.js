@@ -24,7 +24,7 @@ describe('Metrics', function () {
         // Does it include our custom metrics as well?
         assert.match(body, /candidates_found/)
         assert.match(body, /unique_events_processed{app="cerebro"}/)
-        assert.match(body, /TYPE candidates_found counter/)
+        assert.match(body, /suitable_pull_requests_found{app="cerebro"}/)
         done()
       })
     })
