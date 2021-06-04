@@ -1,45 +1,25 @@
 const { Octokit } = require('@octokit/rest')
 const EventEmitter = require('events')
-
 const events = new EventEmitter()
+
+let commentThreshold
+let changeSetThreshold
 let seekInterval
 let octokit
 let cursor = 0
 
-// Authenticated GitHub requests can be made 5000 times per
-// hour, which means one request can be made every 714.3ms
-// However, the public events feed isn't that busy so we just
-// round up to 1000ms or 1 second.
-//
-// Non-authenticated users can only make 60 requests per hour :(
-// TODO: Look into getting this from Octokit or the GH headers?
-function start (auth, {
-  commentThreshold = 3,
-  changeSetThreshold = 5432,
-  showNonHireable = false,
-  targetLanguages
-} = {}) {
-  const interval = auth ? 1000 : 60000
-  octokit = new Octokit({ auth })
-  seekInterval = setInterval((function seek () {
-    octokit.activity.listPublicEvents({ per_page: 100 })
-      .then(res => {
-        return firstFilter(res.data, { commentThreshold, changeSetThreshold })
-      })
-      .then((data) => secondFilter(data, { targetLanguages, showNonHireable }))
-      .catch(console.error)
-
-    return seek
-  }()), interval)
-}
-
-function stop () { clearInterval(seekInterval) }
-
-function firstFilter (ghEvents, { commentThreshold, changeSetThreshold }) {
+function getNewEvents (ghEvents) {
   const uniqueEvents = ghEvents.filter(d => parseInt(d.id, 10) > cursor)
   events.emit('_debug.uniqueEvents', uniqueEvents.length)
 
-  const suitablePRs = uniqueEvents
+  // Update cursor to greatest known ID
+  cursor = ghEvents.map(e => parseInt(e.id, 10)).sort()[ghEvents.length - 1]
+  return Promise.resolve(uniqueEvents)
+}
+
+function getSuitablePRs (newEvents, { commentThreshold, changeSetThreshold }) {
+  const suitablePRs = newEvents
+    // Get merged pull requests
     .filter(d => d.type === 'PullRequestEvent')
     .filter(p => p.payload.action === 'closed')
     .map(p => p.payload.pull_request)
@@ -49,18 +29,46 @@ function firstFilter (ghEvents, { commentThreshold, changeSetThreshold }) {
     .filter(pr => (pr.additions + pr.deletions) <= changeSetThreshold)
     // We can add better bot detections it becomes an issue
     .filter(pr => pr.user.login.indexOf('bot') === -1)
-  events.emit('_debug.suitablePRs', suitablePRs.length)
 
-  const filteredEvents = suitablePRs.map(pr => ({
+  events.emit('_debug.suitablePRs', suitablePRs.length)
+  return Promise.resolve(suitablePRs)
+}
+
+async function formatSuitablePRs (suitablePRs) {
+  const formattedPRs = suitablePRs.map(pr => ({
     prHtmlUrl: pr.html_url,
     languagesUrl: pr.url.replace(/pulls(.*)$/g, 'languages'),
     username: pr.user.login
   }))
-  events.emit('_debug.filteredEvents', filteredEvents.length)
-
-  cursor = ghEvents.map(e => parseInt(e.id, 10)).sort()[ghEvents.length - 1]
-  return Promise.resolve(filteredEvents)
+  events.emit('_debug.filteredEvents', formattedPRs.length)
+  return Promise.resolve(formattedPRs)
 }
+
+function start (auth, {
+  commentThreshold = 3,
+  changeSetThreshold = 5432,
+  showNonHireable = false,
+  targetLanguages
+} = {}) {
+  // 5000 authenticated requests/hour (rounded up) or 60 for non-auth :(
+  // TODO: Look into getting this from Octokit somehow? GH headers don't provide.
+  const interval = auth ? 1000 : 60000
+  if(!octokit) { octokit = new Octokit({ auth }) }
+
+  seekInterval = setInterval((function seek () {
+    const rawEvents = octokit.activity.listPublicEvents({ per_page: 100 })
+      .then(res => res.data)
+      .then(getNewEvents)
+      .then(newEvents => getSuitablePRs(newEvents, { commentThreshold, changeSetThreshold }))
+      .then(formatSuitablePRs)
+      .then((data) => secondFilter(data, { targetLanguages, showNonHireable }))
+      .catch(console.error)
+
+    return seek
+  }()), interval) // IIFE executes automatically
+}
+
+function stop () { clearInterval(seekInterval) }
 
 async function secondFilter (results, { targetLanguages, showNonHireable }) {
   for (let i = 0; i < results.length; i++) {
@@ -75,7 +83,6 @@ async function secondFilter (results, { targetLanguages, showNonHireable }) {
     }
     if (includedLangs.length === 0) continue
 
-    // TODO: Refactor to "output" function of some sort
     const candidate = (await octokit.users.getByUsername({ username })).data
     if (candidate.hireable || showNonHireable) {
       events.emit('candidateFound', {
