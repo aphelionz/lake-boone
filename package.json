@@ -4,9 +4,13 @@
   "description": "",
   "main": "./src/index.js",
   "scripts": {
+    "coverage": "nyc npm run test",
+    "lint": "standard",
     "start": "node ./src/index.js",
-    "test": "mocha",
-    "coverage": "nyc npm run test"
+    "test": "mocha"
+  },
+  "standard": {
+    "env": ["mocha"]
   },
   "keywords": [],
   "author": "",
