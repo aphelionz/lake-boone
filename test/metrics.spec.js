@@ -22,9 +22,9 @@ describe('Metrics', function () {
         assert.match(body, /nodejs_eventloop_lag_stddev_seconds/)
 
         // Does it include our custom metrics as well?
-        assert.match(body, /candidates_found{app="cerebro"}/)
+        assert.match(body, /candidates_found/)
         assert.match(body, /unique_events_processed{app="cerebro"}/)
-        assert.match(body, /suitable_pull_requests_found{app="cerebro"}/)
+        assert.match(body, /TYPE candidates_found counter/)
         done()
       })
     })
@@ -32,6 +32,22 @@ describe('Metrics', function () {
 
   it('exports custom metrics in the module.exports.metrics array', () => {
     assert(metrics.custom.candidatesFound)
+  })
+
+  it('shows language-specific metrics with Prometheus labels', () => {
+    metrics.custom.candidatesFound.labels({ lang: 'go' }).inc(1)
+    metrics.custom.candidatesFound.labels({ lang: 'java' }).inc(2)
+    metrics.custom.candidatesFound.labels({ lang: 'rust' }).inc(3)
+
+    http.get(`http://127.0.0.1:${port}`, (res) => {
+      assert.strictEqual(res.statusCode, 200)
+      res.on('data', function (chunk) {
+        const body = chunk.toString()
+        assert.match(body, /candidates_found{lang="go",app="cerebro"} 1/)
+        assert.match(body, /candidates_found{lang="java",app="cerebro"} 2/)
+        assert.match(body, /candidates_found{lang="rust",app="cerebro"} 3/)
+      })
+    })
   })
 
   after(() => {
