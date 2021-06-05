@@ -14,9 +14,9 @@ const output = require('./output')
 // TODO: Validate these
 const {
   GH_TOKEN = null,
-  COMMENT_THRESHOLD,
-  SHOW_NON_HIREABLE,
-  CHANGESET_THRESHOLD,
+  COMMENT_THRESHOLD = 3,
+  SHOW_NON_HIREABLE = false,
+  CHANGESET_THRESHOLD = 5432,
   LANGUAGES
 } = process.env
 
@@ -27,9 +27,9 @@ if (targetLanguages.length === 0) { throw new Error('Please specify at least one
 seeker.start(
   GH_TOKEN,
   {
-    parsedThreshold: isNaN(parseInt(COMMENT_THRESHOLD)) ? parseInt(COMMENT_THRESHOLD) : 3,
-    showNonHireable: SHOW_NON_HIREABLE || false,
-    changeSetThreshold: CHANGESET_THRESHOLD || 5432,
+    parsedThreshold: parseInt(COMMENT_THRESHOLD, 10),
+    showNonHireable: SHOW_NON_HIREABLE,
+    changeSetThreshold: CHANGESET_THRESHOLD,
     targetLanguages
   }
 )
