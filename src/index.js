@@ -13,7 +13,7 @@ const output = require('./output')
 // Initialization
 // TODO: Validate these
 const {
-  GH_TOKEN,
+  GH_TOKEN = null,
   COMMENT_THRESHOLD,
   SHOW_NON_HIREABLE,
   CHANGESET_THRESHOLD,
@@ -25,7 +25,7 @@ if (targetLanguages.length === 0) { throw new Error('Please specify at least one
 
 // Start our GitHub events seeker
 seeker.start(
-  GH_TOKEN || null,
+  GH_TOKEN,
   {
     parsedThreshold: isNaN(parseInt(COMMENT_THRESHOLD)) ? parseInt(COMMENT_THRESHOLD) : 3,
     showNonHireable: SHOW_NON_HIREABLE || false,
