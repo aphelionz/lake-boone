@@ -46,7 +46,6 @@ async function formatSuitablePRs (suitablePRs) {
     username: pr.user.login
   }))
 
-  events.emit('stats-filtered-events', formattedPRs.length)
   return Promise.resolve(formattedPRs)
 }
 
@@ -95,14 +94,14 @@ async function extractCandidate (results, { targetLanguages, showNonHireable }) 
       if (repoLanguages[0] === lang || repoLanguages[1] === lang) includedLangs.push(lang)
     }
     if (includedLangs.length === 0) {
-      events.emit('miss-included-langs')
+      events.emit('miss-included-langs', 1)
       continue
     }
 
     const candidate = (await octokit.users.getByUsername({ username })).data
 
     if (!candidate.hireable && !showNonHireable) {
-      events.emit('miss-non-hireable')
+      events.emit('miss-non-hireable', 1)
       continue
     }
 

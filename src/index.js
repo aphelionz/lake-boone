@@ -1,4 +1,12 @@
 const metrics = require('./metrics')
+const {
+  candidatesFound,
+  missIncludedLangs,
+  missNonHireable,
+  pullRequests,
+  uniqueEvents,
+  suitablePRs
+} = require('./metrics').custom
 const seeker = require('./seeker')
 const output = require('./output')
 
@@ -26,18 +34,18 @@ seeker.start(
   }
 )
 
-seeker.events.on('_debug.uniqueEvents', (count) => {
-  metrics.custom.uniqueEventsProcessed.inc(count)
-})
-seeker.events.on('_debug.suitablePRs', (count) => {
-  metrics.custom.suitablePRs.inc(count)
-})
+seeker.events.on('miss-included-langs', count => missIncludedLangs.inc(count))
+seeker.events.on('miss-non-hireable', count => missNonHireable.inc(count))
+
+seeker.events.on('stats-unique-events', count => uniqueEvents.inc(count))
+seeker.events.on('stats-pull-requests', count => pullRequests.inc(count))
+seeker.events.on('stats-suitable-prs', count => suitablePRs.inc(count))
 
 function outputCandidate (candidate) {
   output.console(candidate)
-  metrics.custom.candidatesFound.labels({ lang: candidate.includedLangs[0] }).inc(1)
+  candidatesFound.labels({ lang: candidate.includedLangs[0] }).inc(1)
 }
-seeker.events.on('candidateFound', outputCandidate)
+seeker.events.on('candidate-found', outputCandidate)
 
 // Start Prometheus metrics server on the specified port
 metrics.start({ port: 9100 })
