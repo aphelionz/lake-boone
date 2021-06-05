@@ -8,17 +8,24 @@ let cursor = 0
 
 function getNewEvents (ghEvents) {
   const uniqueEvents = ghEvents.filter(d => parseInt(d.id, 10) > cursor)
-  events.emit('_debug.uniqueEvents', uniqueEvents.length)
-
   // Update cursor to greatest known ID
   cursor = ghEvents.map(e => parseInt(e.id, 10)).sort()[ghEvents.length - 1]
+
+  events.emit('stats-unique-events', uniqueEvents.length)
   return Promise.resolve(uniqueEvents)
 }
 
-function getSuitablePRs (newEvents, { commentThreshold, changeSetThreshold }) {
-  const suitablePRs = newEvents
+function getPREvents (newEvents) {
+  const prEvents = newEvents
     // Get merged pull requests
     .filter(d => d.type === 'PullRequestEvent')
+
+  events.emit('stats-pull-requests', prEvents.length)
+  return Promise.resolve(prEvents)
+}
+
+function getSuitablePRs (prEvents, { commentThreshold, changeSetThreshold }) {
+  const suitablePRs = prEvents
     .filter(p => p.payload.action === 'closed')
     .map(p => p.payload.pull_request)
     .filter(pr => pr.merged)
@@ -28,7 +35,7 @@ function getSuitablePRs (newEvents, { commentThreshold, changeSetThreshold }) {
     // We can add better bot detections it becomes an issue
     .filter(pr => pr.user.login.indexOf('bot') === -1)
 
-  events.emit('_debug.suitablePRs', suitablePRs.length)
+  events.emit('stats-suitable-prs', suitablePRs.length)
   return Promise.resolve(suitablePRs)
 }
 
@@ -38,7 +45,8 @@ async function formatSuitablePRs (suitablePRs) {
     languagesUrl: pr.url.replace(/pulls(.*)$/g, 'languages'),
     username: pr.user.login
   }))
-  events.emit('_debug.filteredEvents', formattedPRs.length)
+
+  events.emit('stats-filtered-events', formattedPRs.length)
   return Promise.resolve(formattedPRs)
 }
 
@@ -57,39 +65,52 @@ function start (auth, {
     octokit.activity.listPublicEvents({ per_page: 100 })
       .then(res => res.data)
       .then(getNewEvents)
-      .then(newEvents => getSuitablePRs(newEvents, { commentThreshold, changeSetThreshold }))
+      .then(getPREvents)
+      .then(prEvents => getSuitablePRs(prEvents, { commentThreshold, changeSetThreshold }))
       .then(formatSuitablePRs)
-      .then((data) => secondFilter(data, { targetLanguages, showNonHireable }))
+      .then((data) => extractCandidate(data, { targetLanguages, showNonHireable }))
       .catch(console.error)
 
     return seek
   }()), interval) // IIFE executes automatically
 }
 
-function stop () { clearInterval(seekInterval) }
+function stop () {
+  clearInterval(seekInterval)
+  cursor = 0
+}
 
-async function secondFilter (results, { targetLanguages, showNonHireable }) {
+async function extractCandidate (results, { targetLanguages, showNonHireable }) {
   for (let i = 0; i < results.length; i++) {
     const { languagesUrl, prHtmlUrl, username } = results[i]
 
     const repoRequest = await octokit.request(`GET ${languagesUrl}`)
     const repoLanguages = Object.keys(repoRequest.data).map(l => l.toLowerCase())
+    // TODO: Introduce Set
     const includedLangs = []
+
     for (const lang of targetLanguages) {
       // The dominant language in the repo should be first or second in the list
       // TODO: Should be the languages in the PR, not the repo.
       if (repoLanguages[0] === lang || repoLanguages[1] === lang) includedLangs.push(lang)
     }
-    if (includedLangs.length === 0) continue
+    if (includedLangs.length === 0) {
+      events.emit('miss-included-langs')
+      continue
+    }
 
     const candidate = (await octokit.users.getByUsername({ username })).data
-    if (candidate.hireable || showNonHireable) {
-      events.emit('candidateFound', {
-        includedLangs,
-        prHtmlUrl,
-        ...candidate
-      })
+
+    if (!candidate.hireable && !showNonHireable) {
+      events.emit('miss-non-hireable')
+      continue
     }
+
+    events.emit('candidate-found', {
+      includedLangs,
+      prHtmlUrl,
+      ...candidate
+    })
   }
 }
 
