@@ -32,7 +32,10 @@ describe('Metrics', function () {
 
   it('exports custom metrics in the module.exports.metrics array', () => {
     assert(metrics.custom.candidatesFound)
-    assert(metrics.custom.uniqueEventsProcessed)
+    assert(metrics.custom.uniqueEvents)
+    assert(metrics.custom.pullRequests)
+    assert(metrics.custom.missNonHireable)
+    assert(metrics.custom.missIncludedLangs)
     assert(metrics.custom.suitablePRs)
   })
 
