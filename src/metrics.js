@@ -44,7 +44,7 @@ const candidatesFound = new client.Counter({
 })
 register.registerMetric(candidatesFound)
 
-function start ({ port = 9100 }) {
+function start ({ port = 9100 } = {}) {
   server = http.createServer(async (req, res) => {
     res.setHeader('Content-Type', register.contentType)
     const metrics = await register.metrics()
