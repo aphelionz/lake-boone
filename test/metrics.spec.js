@@ -6,7 +6,7 @@ const port = 63429
 
 describe('Metrics', function () {
   describe('Defaults', function () {
-    it('starts on default port 3000', () => {
+    it('starts on default port 9100', () => {
       metrics.start()
       metrics.stop()
     })
