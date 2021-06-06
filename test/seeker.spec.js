@@ -1,36 +1,38 @@
 const assert = require('assert')
 const seeker = require('../src/seeker')
-const { events } = require('../src/seeker')
-require('./fixtures/github-api')
+require('./mocks/github-api')
 
 describe('Seeker', function () {
   describe('Events', function () {
+    this.timeout(10000)
+
     it('emits the metrics event', (done) => {
-      events.on('metrics', function cb (metrics) {
+      seeker.events.on('metrics', function cb (metrics) {
         assert.strictEqual(metrics.uniqueEvents, 3)
         assert.strictEqual(metrics.prEvents, 3)
         assert.strictEqual(metrics.suitablePRs, 3)
         assert.strictEqual(metrics.missIncludedLangs, 1)
         assert.strictEqual(metrics.missNonHireable, 1)
+        assert.strictEqual(metrics.candidatesFound, 1)
+        seeker.stop()
         done()
-        events.off('metrics', cb)
       })
       seeker.start('', { targetLanguages: ['java'] })
-      seeker.stop()
     })
 
     it('emits the candidate-found event', (done) => {
-      seeker.start(null, { targetLanguages: ['java'] })
-      events.on('candidate-found', function cb (candidate) {
+      seeker.stop()
+      seeker.events.on('candidate-found', function cb (candidate) {
         assert.deepStrictEqual(candidate, {
           hireable: true,
           includedLangs: ['java'],
           prHtmlUrl: 'https://github.com/foo/bar/pull/1234'
         })
-        events.off('candidate-found', cb)
+        seeker.events.off('candidate-found', cb)
+        seeker.stop()
         done()
       })
-      seeker.stop()
+      seeker.start(null, { targetLanguages: ['java'] })
     })
   })
 
