@@ -2,7 +2,7 @@ const { Octokit } = require('@octokit/rest')
 const EventEmitter = require('events')
 const events = new EventEmitter()
 
-let seekInterval
+let metricsInterval, seekInterval
 let octokit
 let cursor = 0
 
@@ -77,15 +77,21 @@ function start (auth, {
       .then(prEvents => getSuitablePRs(prEvents, { commentThreshold, changeSetThreshold }))
       .then(formatSuitablePRs)
       .then((data) => extractCandidate(data, { targetLanguages, showNonHireable }))
-      .then(() => events.emit('metrics', metrics))
       .catch(console.error)
 
     return seek
-  }()), interval) // IIFE executes automatically
+  })(), interval) // IIFE executes automatically
+
+  metricsInterval = setInterval(function sendMetrics () {
+    events.emit('metrics', metrics)
+    return sendMetrics
+  }, 5000)
 }
 
 function stop () {
+  clearInterval(metricsInterval)
   clearInterval(seekInterval)
+  events.removeAllListeners()
   metrics = {
     uniqueEvents: 0,
     prEvents: 0,
@@ -128,6 +134,7 @@ async function extractCandidate (results, { targetLanguages, showNonHireable }) 
       prHtmlUrl,
       ...candidate
     })
+    metrics.candidatesFound++
   }
 }
 

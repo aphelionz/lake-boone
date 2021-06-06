@@ -8,6 +8,7 @@ const {
   suitablePRs
 } = require('./metrics').custom
 const seeker = require('./seeker')
+const websocket = require('./output/websocket')
 
 // Initialization
 // TODO: Validate these
@@ -33,21 +34,27 @@ seeker.start(
   }
 )
 
-seeker.events.on('miss-included-langs', count => missIncludedLangs.inc(count))
-seeker.events.on('miss-non-hireable', count => missNonHireable.inc(count))
+seeker.events.on('metrics', async (metrics) => {
+  uniqueEvents.set(metrics.uniqueEvents)
+  pullRequests.set(metrics.prEvents)
+  suitablePRs.set(metrics.suitablePRs)
+  missIncludedLangs.set(metrics.missIncludedLangs)
+  missNonHireable.set(metrics.missNonHireable)
+  // TODO: Fix lang labels
+  candidatesFound.set(metrics.candidatesFound)
 
-seeker.events.on('stats-unique-events', count => uniqueEvents.inc(count))
-seeker.events.on('stats-pull-requests', count => pullRequests.inc(count))
-seeker.events.on('stats-suitable-prs', count => suitablePRs.inc(count))
+  websocket.broadcast({ metrics })
+})
 
-function outputCandidate (candidate) {
-  console.log(candidate)
-  candidatesFound.labels({ lang: candidate.includedLangs[0] }).inc(1)
-}
-seeker.events.on('candidate-found', outputCandidate)
+seeker.events.on('candidate-found', (candidate) => {
+  websocket.broadcast({ candidate })
+})
 
-// Start Prometheus metrics server on the specified port
-metrics.start({ port: 9100 })
+// Start Prometheus metrics server on the default port 8080
+websocket.start()
+
+// Start Prometheus metrics server on the default port 9100
+metrics.start()
 
 // Exit cleanly on SIGINT
 // TODO: Maybe emit stats?
