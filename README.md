@@ -76,7 +76,7 @@ With `docker`:
 docker run -ti \
   -e GH_TOKEN=XXXXX \
   -e LANGUAGES=c++,javascript \
-  aphelionz/cerebro-cli:v0.2.4
+  aphelionz/cerebro-cli:v0.3.0
 ```
 
 Or in your `docker-compose` file:
@@ -84,7 +84,7 @@ Or in your `docker-compose` file:
 ```yaml
 services:
   cerebro:
-    image: aphelionz/cerebro-cli:v0.2.4
+    image: aphelionz/cerebro-cli:v0.3.0
     environment:
       GH_TOKEN: XXXXX
       LANGUAGES: rust,solidity
