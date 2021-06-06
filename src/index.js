@@ -8,7 +8,6 @@ const {
   suitablePRs
 } = require('./metrics').custom
 const seeker = require('./seeker')
-const output = require('./output')
 
 // Initialization
 // TODO: Validate these
@@ -42,7 +41,7 @@ seeker.events.on('stats-pull-requests', count => pullRequests.inc(count))
 seeker.events.on('stats-suitable-prs', count => suitablePRs.inc(count))
 
 function outputCandidate (candidate) {
-  output.console(candidate)
+  console.log(candidate)
   candidatesFound.labels({ lang: candidate.includedLangs[0] }).inc(1)
 }
 seeker.events.on('candidate-found', outputCandidate)
