@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<html>
+  <head>
+    <title>Sankey Diagram</title>
+    <script src='https://cdn.plot.ly/plotly-2.0.0-rc.3.min.js'></script>
+  </head>
+  <body>
+    <div id='myDiv'></div>
+    <script type="module">
+      var layout = {
+        title: "Cerebro",
+        font: { size: 10 }
+      }
+
+      let uniqueEvents = 0
+      let discardedEvents = 0
+      let missNonHireable = 0
+      let missIncludedLangs = 0
+      let nonSuitablePRs = 0
+      let pullRequests = 0
+      let suitablePRs = 0
+      let candidatesFound = 0
+
+      let data = [{
+        type: "sankey",
+        orientation: "h",
+        node: {
+          pad: 15,
+          thickness: 30,
+          line: {
+            color: "black",
+            width: 0.5
+          },
+          label: [
+            "Raw Events",
+            "Other Events",
+            "Non-Suitable PR Events",
+            "Suitable PR Events",
+            "Discarded Events",
+            "Miss - Non-Hireable",
+            "Miss - Lang Mismatch",
+            "Hit"
+          ],
+          color: [
+            "green",
+            "white",
+            "white",
+            "green",
+            "white",
+            "white",
+            "white",
+            "white"
+          ]
+        },
+        link: {
+          source: [0,0,0,1,2,3,3,3],
+          target: [1,2,3,4,4,5,6,7],
+          value:  [
+            discardedEvents,
+            nonSuitablePRs,
+            suitablePRs,
+            discardedEvents,
+            pullRequests,
+            missNonHireable,
+            missIncludedLangs,
+            candidatesFound
+          ]
+        }
+      }]
+
+      const ws = new WebSocket('ws://127.0.0.1:8080')
+      ws.addEventListener('message', event => {
+        const message = JSON.parse(event.data)
+        const { metrics } = message
+        if(!metrics) return
+
+        if(metrics.uniqueEvents) {
+          uniqueEvents = metrics.uniqueEvents
+          data[0].node.label[0] = `Raw Events (${uniqueEvents})`
+        }
+
+        if(metrics.prEvents) {
+          pullRequests = metrics.prEvents
+          data[0].node.label[1] = `Other Events (${uniqueEvents - pullRequests})`
+        }
+
+        if(metrics.suitablePRs) {
+          suitablePRs = metrics.suitablePRs
+          data[0].node.label[3] = `Suitable PR Events (${suitablePRs})`
+        }
+
+        discardedEvents = uniqueEvents - suitablePRs
+        data[0].node.label[4] = `Discarded Events (${discardedEvents})`
+
+        nonSuitablePRs = pullRequests - suitablePRs
+        data[0].node.label[2] = `Other PR Events (${pullRequests - suitablePRs})`
+
+        if(metrics.missNonHireable) {
+          missNonHireable = metrics.missNonHireable
+          data[0].node.label[5] = `Miss: Non-Hireable (${missNonHireable})`
+        }
+
+        if(metrics.missIncludedLangs) {
+          missIncludedLangs = metrics.missIncludedLangs
+          data[0].node.label[6] = `Miss: Language Mismatch (${missIncludedLangs})`
+        }
+
+        if(metrics.candidatesFound) {
+          candidatesFound = metrics.candidatesFound
+          data[0].node.label[7] = `Hit (${candidatesFound})`
+        }
+
+        data[0].link.value = [
+          discardedEvents,
+          nonSuitablePRs,
+          suitablePRs,
+          discardedEvents,
+          pullRequests,
+          missNonHireable,
+          missIncludedLangs,
+          candidatesFound
+        ]
+
+        if(message.candidate) {
+          const candidateList = document.querySelector('#candidates')
+          candidateList.appendChild('<li>xxxx</li>')
+          console.log(message.candidate)
+        }
+
+        Plotly.react('myDiv', data, layout)
+      })
+    </script>
+
+    <h2>Candidates</h3>
+    <ul id="candidates">
+      <li />
+    </ul>
+  </body>
+</html>
