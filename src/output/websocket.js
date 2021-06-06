@@ -9,7 +9,6 @@ function start ({ port = 8080, pingInterval = 30000 } = {}) {
 
   serverInterval = setInterval((function ping () {
     wss.clients.forEach(client => {
-      console.log(client.isAlive)
       if (client.isAlive === false) return client.terminate()
 
       client.isAlive = false

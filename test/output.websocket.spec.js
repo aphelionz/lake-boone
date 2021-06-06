@@ -10,8 +10,15 @@ const seeker = require('../src/seeker')
 const port = 61042
 const pingInterval = 500
 
-describe('Output', function () {
-  describe('Websockets', function () {
+describe('WebSockets', function () {
+  describe('Defaults', function () {
+    it('runs by default on port 8080', () => {
+      websocket.start()
+      websocket.stop()
+    })
+  })
+
+  describe('Custom Config', function () {
     before(() => {
       websocket.start({ port, pingInterval })
       seeker.events.on('candidate-found', websocket.broadcast)
@@ -28,24 +35,31 @@ describe('Output', function () {
       seeker.stop()
     })
 
+    it('logs receives messages', () => {
+      const client = new WebSocket(`http://127.0.0.1:${port}`)
+      setTimeout(() => client.send('message'), 500)
+      setTimeout(() => client.close(), 700)
+    })
+
     it('plays ping pong', (done) => {
+      let pingCount = 0
+
       function heartbeat () {
-        this.send('')
         clearTimeout(this.pingTimeout)
 
-        this.pingTimeout = setTimeout(() => {
-          this.terminate()
-        }, pingInterval + 50)
+        pingCount++
+        if (pingCount === 3) {
+          this.close()
+          done()
+        }
+
+        this.pingTimeout = setTimeout(this.terminate, pingInterval + 50)
       }
 
       const client = new WebSocket(`http://127.0.0.1:${port}`)
-      const client2 = new WebSocket(`http://127.0.0.1:${port}`)
-      setTimeout(() => {
-        client2.terminate()
-      }, pingInterval / 2)
 
       client.on('open', heartbeat)
-      client.on('ping', () => done())
+      client.on('ping', heartbeat)
       client.on('close', function clear () {
         clearTimeout(this.pingTimeout)
       })
