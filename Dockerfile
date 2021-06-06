@@ -4,7 +4,7 @@ WORKDIR /home/node/app
 
 COPY package.json .
 COPY package-lock.json .
-COPY index.js .
+COPY ./src/ ./src/
 
 RUN npm install
 
