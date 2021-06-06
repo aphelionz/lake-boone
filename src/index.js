@@ -8,6 +8,7 @@ const {
   suitablePRs
 } = require('./metrics').custom
 const seeker = require('./seeker')
+const ui = require('live-server')
 const websocket = require('./output/websocket')
 
 // Initialization
@@ -56,6 +57,13 @@ websocket.start()
 // Start Prometheus metrics server on the default port 9100
 metrics.start()
 
+// Start examples UI for now
+ui.start({
+  port: 3000,
+  root: './examples',
+  open: false
+})
+
 // Exit cleanly on SIGINT
 // TODO: Maybe emit stats?
 process.on('SIGINT', function (e) {
@@ -65,5 +73,8 @@ process.on('SIGINT', function (e) {
   console.log('stopping seeker...')
   seeker.events.removeAllListeners()
   seeker.stop()
+
+  console.log('stopping examples ui...')
+  ui.shutdown()
   process.exit()
 })

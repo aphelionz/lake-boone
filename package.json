@@ -23,6 +23,7 @@
     "ws": "^7.4.6"
   },
   "devDependencies": {
+    "live-server": "^1.2.1",
     "markdownlint": "^0.23.1",
     "markdownlint-cli": "^0.27.1",
     "mocha": "^8.4.0",
