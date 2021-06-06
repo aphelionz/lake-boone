@@ -6,12 +6,21 @@ let seekInterval
 let octokit
 let cursor = 0
 
+let metrics = {
+  uniqueEvents: 0,
+  prEvents: 0,
+  suitablePRs: 0,
+  missIncludedLangs: 0,
+  missNonHireable: 0,
+  candidatesFound: 0
+}
+
 function getNewEvents (ghEvents) {
   const uniqueEvents = ghEvents.filter(d => parseInt(d.id, 10) > cursor)
   // Update cursor to greatest known ID
   cursor = ghEvents.map(e => parseInt(e.id, 10)).sort()[ghEvents.length - 1]
 
-  events.emit('stats-unique-events', uniqueEvents.length)
+  metrics.uniqueEvents += uniqueEvents.length
   return Promise.resolve(uniqueEvents)
 }
 
@@ -20,7 +29,7 @@ function getPREvents (newEvents) {
     // Get merged pull requests
     .filter(d => d.type === 'PullRequestEvent')
 
-  events.emit('stats-pull-requests', prEvents.length)
+  metrics.prEvents += prEvents.length
   return Promise.resolve(prEvents)
 }
 
@@ -35,7 +44,7 @@ function getSuitablePRs (prEvents, { commentThreshold, changeSetThreshold }) {
     // We can add better bot detections it becomes an issue
     .filter(pr => pr.user.login.indexOf('bot') === -1)
 
-  events.emit('stats-suitable-prs', suitablePRs.length)
+  metrics.suitablePRs += suitablePRs.length
   return Promise.resolve(suitablePRs)
 }
 
@@ -68,6 +77,7 @@ function start (auth, {
       .then(prEvents => getSuitablePRs(prEvents, { commentThreshold, changeSetThreshold }))
       .then(formatSuitablePRs)
       .then((data) => extractCandidate(data, { targetLanguages, showNonHireable }))
+      .then(() => events.emit('metrics', metrics))
       .catch(console.error)
 
     return seek
@@ -76,6 +86,14 @@ function start (auth, {
 
 function stop () {
   clearInterval(seekInterval)
+  metrics = {
+    uniqueEvents: 0,
+    prEvents: 0,
+    suitablePRs: 0,
+    missIncludedLangs: 0,
+    missNonHireable: 0,
+    candidatesFound: 0
+  }
   cursor = 0
 }
 
@@ -94,14 +112,14 @@ async function extractCandidate (results, { targetLanguages, showNonHireable }) 
       if (repoLanguages[0] === lang || repoLanguages[1] === lang) includedLangs.push(lang)
     }
     if (includedLangs.length === 0) {
-      events.emit('miss-included-langs', 1)
+      metrics.missIncludedLangs++
       continue
     }
 
     const candidate = (await octokit.users.getByUsername({ username })).data
 
     if (!candidate.hireable && !showNonHireable) {
-      events.emit('miss-non-hireable', 1)
+      metrics.missNonHireable++
       continue
     }
 
