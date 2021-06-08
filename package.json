@@ -6,6 +6,7 @@
   "scripts": {
     "coverage": "nyc npm run test",
     "lint": "standard && markdownlint *.md",
+    "script:collect-langs": "node scripts/collect-languages.js",
     "start": "node ./src/index.js",
     "test": "mocha"
   },
