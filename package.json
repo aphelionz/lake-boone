@@ -19,6 +19,7 @@
   "author": "",
   "license": "AGPL-3.0",
   "dependencies": {
+    "@octokit/plugin-throttling": "^3.4.2",
     "@octokit/rest": "^18.5.6",
     "prom-client": "^13.1.0",
     "ws": "^7.4.6"
