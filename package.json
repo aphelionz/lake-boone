@@ -24,11 +24,11 @@
   "dependencies": {
     "@octokit/plugin-throttling": "^3.4.2",
     "@octokit/rest": "^18.5.6",
+    "live-server": "^1.2.1",
     "prom-client": "^13.1.0",
     "ws": "^7.4.6"
   },
   "devDependencies": {
-    "live-server": "^1.2.1",
     "markdownlint": "^0.23.1",
     "markdownlint-cli": "^0.27.1",
     "mocha": "^8.4.0",
