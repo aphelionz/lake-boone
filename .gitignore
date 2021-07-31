@@ -2,3 +2,4 @@ node_modules
 cerebro.log
 .env
 .nyc_output
+.next

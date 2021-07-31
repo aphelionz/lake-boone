@@ -8,10 +8,13 @@
   "main": "./src/index.js",
   "scripts": {
     "coverage": "nyc npm run test",
-    "lint": "standard && markdownlint *.md",
+    "lint": "next lint && markdownlint *.md",
     "script:collect-langs": "node scripts/collect-languages.js",
-    "start": "node ./src/index.js",
-    "test": "mocha"
+    "start:hunter": "node ./src/index.js",
+    "test": "mocha",
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
   },
   "standard": {
     "env": [
@@ -25,7 +28,10 @@
     "@octokit/plugin-throttling": "^3.4.2",
     "@octokit/rest": "^18.5.6",
     "live-server": "^1.2.1",
+    "next": "^11.0.1",
     "prom-client": "^13.1.0",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
     "ws": "^7.4.6"
   },
   "devDependencies": {
