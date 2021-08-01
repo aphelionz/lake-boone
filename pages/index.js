@@ -1,85 +1,89 @@
 /* global fetch */
 
 import { useRouter } from 'next/router'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
-const REDIRECT_URI = 'http://127.0.0.1:3000'
-const CLIENT_ID = process.env.GITHUB_CLIENT_ID
-const CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET
-const ALLOW_SIGNUP = true
+import seeker from '../src/seeker.js'
 
-const OAUTH_LINK = 'https://github.com/login/oauth/authorize?'
-const ACCESS_TOKEN_LINK = 'https://github.com/login/oauth/access_token?'
+import GitHubLogin from '../components/GitHubLogin'
+import CandidateList from '../components/CandidateList'
 
-function getISODateFromNow (deltaString) {
-  const delta = parseInt(deltaString, 10)
-  const dateNow = new Date().getTime()
-  const adjustedDate = new Date(dateNow + delta)
-  return adjustedDate.toString()
-}
+const CLIENT_ID = process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID
 
-// Also:
-//  - console.log(props.scope)
-//  - console.log(props.token_type)
-function storeProps (props) {
-  if (process.browser) {
-    if (props.access_token && props.expires_in) {
-      const date = getISODateFromNow(props.expires_in)
-      document.cookie = `access_token=${props.access_token};expires=${date};samesite`
+function startSeeker(e) {
+  // TODO: UI-ify
+  const COMMENT_THRESHOLD = 3
+  const SHOW_NON_HIREABLE = true
+  const CHANGESET_THRESHOLD = 4321
+  const targetLanguages = "javascript,rust,typescript,solidity,c++"
+    .split(',').map(l => l.toLowerCase())
+
+  seeker.start(
+    e.detail.authToken,
+    {
+      parsedThreshold: parseInt(COMMENT_THRESHOLD, 10),
+      showNonHireable: SHOW_NON_HIREABLE,
+      changeSetThreshold: CHANGESET_THRESHOLD,
+      targetLanguages
     }
+  )
 
-    if (props.refresh_token && props.refresh_token_expires_in) {
-      const date = getISODateFromNow(props.refresh_token_expires_in)
-      document.cookie = `refresh_token=${props.refresh_token};expires=${date};samesite`
-    }
-  }
+  seeker.events.on('candidate-found', console.log)
+  // seeker.events.on('metrics', metrics => setMetrics({...metrics}))
 }
 
 function HomePage (props) {
+  const [started, setStarted] = useState(false)
+  const [metrics, setMetrics] = useState({
+    uniqueEvents: 0,
+    prEvents: 0,
+    suitablePRs: 0,
+    missIncludedLangs: 0,
+    missNonHireable: 0,
+    candidatesFound: 0,
+    limit: 0,
+    remaining: 0,
+    used: 0
+  })
+
   const router = useRouter()
-  if (router.query.code) {
-    storeProps(props)
-
-    useEffect(() => {
+  useEffect(() => {
+    if (router.query.code) {
+      storeProps(props)
       router.push('/')
-    })
-  }
-
-  const searchParams = new URLSearchParams()
-  searchParams.append('client_id', CLIENT_ID)
-  searchParams.append('redirect_uri', REDIRECT_URI)
-  searchParams.append('allow_signup', ALLOW_SIGNUP)
-  // TODO: Use window.crypto
-  // searchParams.append('state', Math.random().toString())
-
-  return (<a href={OAUTH_LINK + searchParams.toString()}>Welcome to Next.js!</a>)
-}
-
-export async function getServerSideProps (context) {
-  const response = { props: {} }
-  if (!context.query.code) return response
-
-  const searchParams = new URLSearchParams()
-  searchParams.append('client_id', CLIENT_ID)
-  searchParams.append('client_secret', CLIENT_SECRET)
-  searchParams.append('redirect_uri', REDIRECT_URI)
-  searchParams.append('code', context.query.code)
-
-  try {
-    const res = await fetch(ACCESS_TOKEN_LINK + searchParams.toString(), {
-      method: 'POST'
-    })
-
-    const accessParams = new URLSearchParams(await res.text())
-    for (const [key, value] of accessParams) {
-      response.props[key] = value
     }
 
-    return response
-  } catch (err) {
-    console.error(err.message)
-    return response
-  }
+    if (process.browser && !started) {
+      document.addEventListener('GitHub:authToken', startSeeker)
+      setStarted(true)
+    }
+
+    return function cleanup() {
+      document.removeEventListener('GitHub:authToken', startSeeker)
+      if (started) seeker.stop()
+    }
+  })
+
+  return (
+    <div>
+      <GitHubLogin clientId={ CLIENT_ID } />
+      <h1>Lake Boone</h1>
+
+      <h2>Stats</h2>
+      <ul>
+        <li>Unique Events: { metrics.uniqueEvents }</li>
+        <li>PR Events: { metrics.prEvents }</li>
+        <li>Suitable PRs: { metrics.suitablePRs }</li>
+        <li>Miss (not in included langs): { metrics.missIncludedLangs }</li>
+        <li>Miss (non-hireable): { metrics.missNonHireable }</li>
+        <li>Candidates Found: { metrics.candidatesFound }</li>
+        <li>Rate limit: { metrics.used } / { metrics.limit } ({metrics.remaining} remaining)</li>
+      </ul>
+
+      <h2>Candidates</h2>
+      <CandidateList />
+    </div>
+  )
 }
 
 export default HomePage
