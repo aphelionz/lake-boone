@@ -11,20 +11,30 @@ function HomePage (props) {
     <div>
       <GitHubLogin clientId={ process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID } />
       <h1>Lake Boone</h1>
+      <h2>Prototypal OSINT Recruiting App</h2>
 
-      <h2>Stats</h2>
-      <ul>
-        <li>Unique Events: { metrics.uniqueEvents }</li>
-        <li>PR Events: { metrics.prEvents }</li>
-        <li>Suitable PRs: { metrics.suitablePRs }</li>
-        <li>Miss (not in included langs): { metrics.missIncludedLangs }</li>
-        <li>Miss (non-hireable): { metrics.missNonHireable }</li>
-        <li>Candidates Found: { metrics.candidatesFound }</li>
-        <li>Rate limit: { metrics.used } / { metrics.limit } ({metrics.remaining} remaining)</li>
-      </ul>
-
-      <h2>Candidates</h2>
-      <CandidateList />
+      <form>
+        <fieldset>
+          <label>Languages:
+            <input
+    type="text"
+    name="languages"
+    value={ languages }
+    onChange={ (e) => setLanguages(e.target.value) } />
+          </label>
+          <details>
+            <summary>Advanced</summary>
+            Coming Soon
+          </details>
+          <input type="submit" value="Update Seeker" />
+        </fieldset>
+      </form>
+      <Seeker
+        commentThreshold="3"
+        showNonHireable="false"
+        targetLanguages="javascript,rust,typescript,solidity,c++,java,php"
+        changeSetThreshold="4321"
+      />
     </div>
   )
 }
