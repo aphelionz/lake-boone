@@ -25,6 +25,7 @@
   "author": "",
   "license": "AGPL-3.0",
   "dependencies": {
+    "@octokit/auth-oauth-app": "^4.3.0",
     "@octokit/plugin-throttling": "^3.4.2",
     "@octokit/rest": "^18.5.6",
     "next": "^11.0.1",
