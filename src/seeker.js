@@ -99,7 +99,7 @@ function start (auth, {
     const { limit, used, remaining } = rateLimit.data.resources.core
     events.emit('metrics', {...metrics, limit, used, remaining})
     return sendMetrics
-  }, 5000)
+  }, 1000)
 }
 
 function stop () {
