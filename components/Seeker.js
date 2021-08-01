@@ -50,7 +50,7 @@ export default function Seeker(props) {
         setStarted(false)
       }
     }
-  }, [])
+  })
 
   return (<>
     <h2>Candidates</h2>
