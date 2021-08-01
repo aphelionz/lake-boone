@@ -67,10 +67,21 @@ function start (auth, {
   // 5000 authenticated requests/hour (rounded up) or 60 for non-auth :(
   // TODO: Look into getting this from Octokit somehow? GH headers don't provide.
   const interval = auth ? 1000 : 60000
-  if (!octokit) { octokit = new Octokit({ auth }) }
+
+  if (!octokit) {
+    octokit = new Octokit({
+      auth,
+      userAgent: 'lakeboone v0.1.0',
+      request: {}
+    })
+  }
+
+  const defaultParams = octokit.activity.listPublicEvents.endpoint.DEFAULTS
 
   seekInterval = setInterval((function seek () {
-    octokit.activity.listPublicEvents({ per_page: 100 })
+    defaultParams.url = `/events?per_page=100&${ new Date().getTime() }`
+
+    octokit.request(defaultParams)
       .then(res => res.data)
       .then(getNewEvents)
       .then(getPREvents)
