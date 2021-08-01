@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-
+import Link from 'next/link'
 
 function ghLogout () {
   if (process.browser) {
@@ -41,11 +41,11 @@ export default function GitHubLogin(props) {
         console.warn(err.message)
       }
     }
-  })
+  }, [authToken])
 
   let link = (<a href={OAUTH_LINK + searchParams.toString()}>Login with GH</a>)
   if (authToken) {
-    link = <a href="/api/github_logout">Log out</a>
+    link = <Link href="/api/github_logout">Log out</Link>
   }
 
   return link
