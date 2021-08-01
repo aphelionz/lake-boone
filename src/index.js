@@ -52,14 +52,13 @@ seeker.events.on('candidate-found', (candidate) => {
   websocket.broadcast({ candidate })
 })
 
-// Start Prometheus metrics server on the default port 8080
+// Start websocket server on default port
 websocket.start()
 
 // Start Prometheus metrics server on the default port 9100
 metrics.start()
 
 // Exit cleanly on SIGINT
-// TODO: Maybe emit stats?
 process.on('SIGINT', function (e) {
   console.log('stopping metrics...')
   metrics.stop()

@@ -1,5 +1,7 @@
-const { Octokit } = require('@octokit/rest')
 const EventEmitter = require('events')
+
+const { Octokit } = require('@octokit/rest')
+
 const events = new EventEmitter()
 
 let metricsInterval, seekInterval
@@ -65,7 +67,6 @@ function start (auth, {
   targetLanguages
 } = {}) {
   // 5000 authenticated requests/hour (rounded up) or 60 for non-auth :(
-  // TODO: Look into getting this from Octokit somehow? GH headers don't provide.
   const interval = auth ? 1000 : 60000
 
   if (!octokit) {
