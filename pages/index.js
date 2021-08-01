@@ -9,31 +9,33 @@ function HomePage (props) {
 
   return (
     <div>
-      <GitHubLogin clientId={ process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID } />
+      <GitHubLogin clientId={process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID} />
       <h1>Lake Boone</h1>
       <h2>Prototypal OSINT Recruiting App</h2>
 
       <form>
         <fieldset>
-          <label>Languages:
+          <label>
+            Languages:
             <input
-    type="text"
-    name="languages"
-    value={ languages }
-    onChange={ (e) => setLanguages(e.target.value) } />
+              type='text'
+              name='languages'
+              value={languages}
+              onChange={(e) => setLanguages(e.target.value)}
+            />
           </label>
           <details>
             <summary>Advanced</summary>
             Coming Soon
           </details>
-          <input type="submit" value="Update Seeker" />
+          <input type='submit' value='Update Seeker' />
         </fieldset>
       </form>
       <Seeker
-        commentThreshold="3"
-        showNonHireable="false"
-        targetLanguages="javascript,rust,typescript,solidity,c++,java,php"
-        changeSetThreshold="4321"
+        commentThreshold='3'
+        showNonHireable='false'
+        targetLanguages='javascript,rust,typescript,solidity'
+        changeSetThreshold='4321'
       />
     </div>
   )
