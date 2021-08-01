@@ -94,8 +94,10 @@ function start (auth, {
     return seek
   })(), interval) // IIFE executes automatically
 
-  metricsInterval = setInterval(function sendMetrics () {
-    events.emit('metrics', metrics)
+  metricsInterval = setInterval(async function sendMetrics () {
+    const rateLimit = await octokit.rest.rateLimit.get()
+    const { limit, used, remaining } = rateLimit.data.resources.core
+    events.emit('metrics', {...metrics, limit, used, remaining})
     return sendMetrics
   }, 5000)
 }
