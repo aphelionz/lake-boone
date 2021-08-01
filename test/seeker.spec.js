@@ -4,8 +4,6 @@ require('./mocks/github-api')
 
 describe('Seeker', function () {
   describe('Events', function () {
-    this.timeout(10000)
-
     it('emits the metrics event', (done) => {
       seeker.events.on('metrics', function cb (metrics) {
         assert.strictEqual(metrics.uniqueEvents, 3)

@@ -3,7 +3,7 @@ const nock = require('nock')
 /* Mock HTTP fixtures */
 nock('https://api.github.com')
   .persist()
-  .get('/events?per_page=100')
+  .get(/\/events?(.*)/)
   .reply(200, [
     {
       id: 1,
@@ -87,4 +87,18 @@ nock('https://api.github.com')
   .get('/users/non-hireable-human')
   .reply(200, {
     hireable: false
+  })
+
+nock('https://api.github.com')
+  .persist()
+  .get('/rate_limit')
+  .reply(200, {
+    resources: {
+      core: {
+        limit: 5000,
+        remaining: 4999,
+        reset: 1372700873,
+        used: 1
+      }
+    },
   })
