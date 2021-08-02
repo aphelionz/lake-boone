@@ -35,3 +35,11 @@ h1,h2,h3 {
     color:#ccf
   }
 }
+
+.react-tags {
+  border: 1px solid var(--new-black);
+}
+.react-tags__selected, .react-tags__search, .react-tags__search-wrapper {
+  display: inline;
+}
+summary { text-align: right; }
