@@ -2,6 +2,8 @@ import { useState } from 'react'
 import ReactTags from 'react-tag-autocomplete'
 
 import seeker from '../src/seeker.js'
+
+import Debug from '../components/Debug'
 import Seeker from '../components/Seeker'
 import GitHubLogin from '../components/GitHubLogin'
 
@@ -39,6 +41,8 @@ function HomePage (props) {
 
   return (
     <div>
+      <Debug />
+
       <GitHubLogin clientId={process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID} />
       <h1>Lake Boone</h1>
       <h2>Prototypal OSINT Recruiting App</h2>
