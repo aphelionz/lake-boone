@@ -10,6 +10,13 @@ h1,h2,h3 {
   line-height:1.2
 }
 
+.lb-debugger {
+  position: fixed;
+  top: 0.5rem;
+  right: 0.5rem;
+  font: 14px monospace;
+}
+
 @media (prefers-color-scheme: dark) {
   body {
     color:#ccc;
