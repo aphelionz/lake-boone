@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import seeker from '../src/seeker.js'
 
 import CandidateList from '../components/CandidateList'
+import Sankey from '../components/Sankey'
 
 export default function Seeker (props) {
   const [candidates, setCandidates] = useState([])
@@ -56,16 +57,15 @@ export default function Seeker (props) {
       <h2>Candidates</h2>
       <CandidateList candidates={candidates} />
 
-      <h2>Stats</h2>
-      <ul>
-        <li>Unique Events: {metrics.uniqueEvents}</li>
-        <li>PR Events: {metrics.prEvents}</li>
-        <li>Suitable PRs: {metrics.suitablePRs}</li>
-        <li>Miss (not in included langs): {metrics.missIncludedLangs}</li>
-        <li>Miss (non-hireable): {metrics.missNonHireable}</li>
-        <li>Candidates Found: {metrics.candidatesFound}</li>
-        <li>Rate limit: {metrics.used} / {metrics.limit} ({metrics.remaining} remaining)</li>
-      </ul>
+      <h2>Pipeline</h2>
+      <Sankey
+        uniqueEvents={metrics.uniqueEvents}
+        prEvents={metrics.prEvents}
+        suitablePRs={metrics.suitablePRs}
+        missIncludedLangs={metrics.missIncludedLangs}
+        missNonHireable={metrics.missNonHireable}
+        candidatesFound={metrics.candidatesFound}
+      />
     </>
   )
 }
