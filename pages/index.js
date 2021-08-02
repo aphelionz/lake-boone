@@ -95,10 +95,14 @@ function HomePage (props) {
         />
       </form>
       <Seeker
-        commentThreshold='3'
-        showNonHireable='false'
-        targetLanguages='javascript,rust,typescript,solidity'
-        changeSetThreshold='4321'
+        commentThreshold={3}
+        showNonHireable={false}
+        targetLanguages={
+          languages
+            .map(l => l.name)
+            .join(',')
+        }
+        changeSetThreshold={4321}
       />
     </div>
   )
