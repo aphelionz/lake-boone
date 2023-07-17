@@ -18,7 +18,7 @@ describe('WebSockets', function () {
   describe('Custom Config', function () {
     it('logs receives messages', (done) => {
       websocket.start({ port })
-      const client = new WebSocket(`http://127.0.0.1:${port}`)
+      const client = new WebSocket(`ws://127.0.0.1:${port}`)
       client.on('open', () => {
         client.send('message')
         client.close()
@@ -45,7 +45,7 @@ describe('WebSockets', function () {
         this.pingTimeout = setTimeout(this.terminate, pingInterval + 10)
       }
 
-      const client = new WebSocket(`http://127.0.0.1:${port}`)
+      const client = new WebSocket(`ws://127.0.0.1:${port}`)
 
       client.on('open', heartbeat)
       client.on('ping', heartbeat)
@@ -58,7 +58,7 @@ describe('WebSockets', function () {
       websocket.start({ port })
       seeker.events.on('candidate-found', websocket.broadcast)
       seeker.start(null, { targetLanguages: ['java'] })
-      const client = new WebSocket(`http://127.0.0.1:${port}`)
+      const client = new WebSocket(`ws://127.0.0.1:${port}`)
 
       client.on('message', (message) => {
         assert.deepStrictEqual(JSON.parse(message), {
