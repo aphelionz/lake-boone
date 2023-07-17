@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import ReactTags from 'react-tag-autocomplete'
+import { ReactTags } from 'react-tag-autocomplete'
 
 import seeker from '../src/seeker.js'
 
