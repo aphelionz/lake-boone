@@ -25,8 +25,8 @@ describe('Metrics', function () {
 
           // Let's just check for a few at random for now
           assert.match(body, /process_cpu_user_seconds_total/)
-          assert.match(body, /process_virtual_memory_bytes/)
-          assert.match(body, /process_open_fds/)
+          assert.match(body, /process_resident_memory_bytes/)
+          assert.match(body, /heap_space_size_used/)
           assert.match(body, /nodejs_eventloop_lag_stddev_seconds/)
 
           // Does it include our custom metrics as well?
