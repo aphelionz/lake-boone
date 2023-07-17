@@ -11,7 +11,7 @@
     "lint": "next lint && markdownlint *.md",
     "script:collect-langs": "node scripts/collect-languages.js",
     "start:hunter": "node ./src/index.js",
-    "test": "mocha",
+    "test": "mocha -exit",
     "dev": "next dev",
     "build": "next build",
     "start": "next start"
