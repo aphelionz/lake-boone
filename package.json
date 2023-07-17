@@ -37,6 +37,7 @@
     "react-tag-autocomplete": "^7.0.0"
   },
   "devDependencies": {
+    "@octokit/fixtures": "^22.0.6",
     "eslint": "^8.45.0",
     "eslint-config-next": "^13.4.10",
     "markdownlint": "^0.29.0",
