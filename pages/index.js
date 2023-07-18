@@ -1,8 +1,6 @@
 import { useState } from 'react'
 import { ReactTags } from 'react-tag-autocomplete'
 
-import seeker from '../src/seeker.js'
-
 import Debug from '../components/Debug'
 import Seeker from '../components/Seeker'
 import GitHubLogin from '../components/GitHubLogin'
@@ -10,21 +8,22 @@ import GitHubLogin from '../components/GitHubLogin'
 function HomePage (props) {
   const [commentThreshold, setCommentThreshold] = useState(3)
   const [changeSetThreshold, setChangeSetThreshold] = useState(5432)
+  const [selected, setSelected] = useState([])
   const [languages, setLanguages] = useState([
-    { id: 1, name: 'JavaScript' },
-    { id: 2, name: 'Rust' },
-    { id: 3, name: 'Solidity' }
+    { value: 1, label: 'JavaScript' },
+    { value: 2, label: 'Rust' },
+    { value: 3, label: 'C++' }
   ])
   const [showHireable, setShowHireable] = useState(false)
   const [suggestions, setSuggestions] = useState([
-    { id: 1, name: 'JavaScript' },
-    { id: 2, name: 'Rust' },
-    { id: 3, name: 'Solidity' }
+    { value: 1, label: 'JavaScript' },
+    { value: 2, label: 'Rust' },
+    { value: 3, label: 'C++' }
   ])
 
   function handleTagAddition (tag) {
-    const newLangs = [].concat(languages, tag)
-    setLanguages(newLangs)
+    const newLangs = [].concat(selected, tag)
+    setSelected(newLangs)
   }
 
   function handleTagDeletion (index) {
@@ -33,29 +32,23 @@ function HomePage (props) {
     setLanguages(newLangs)
   }
 
-  function restartSeekerWithNewParams (e) {
-    e.preventDefault()
-
-    console.log(e)
-  }
-
   return (
     <div>
       <Debug />
 
       <GitHubLogin clientId={process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID} />
       <h1>Lake Boone</h1>
-      <h2>Prototypal OSINT Recruiting App</h2>
+      <h2>OSINT Recruiting App</h2>
 
       <form>
         <label>
           Languages:
           <ReactTags
-            // ref={this.reactTags}
-            tags={languages}
+            labelText=""
+            selected={languages}
             suggestions={suggestions}
             onDelete={handleTagDeletion}
-            onAddition={handleTagAddition}
+            onAdd={handleTagAddition}
           />
         </label>
         <details>
@@ -92,11 +85,6 @@ function HomePage (props) {
             </label>
           </div>
         </details>
-        <input
-          type='submit'
-          value='[re]start seeker'
-          onClick={restartSeekerWithNewParams}
-        />
       </form>
       <Seeker
         commentThreshold={3}

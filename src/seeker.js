@@ -2,8 +2,6 @@ const EventEmitter = require('events')
 
 const { Octokit } = require('@octokit/rest')
 
-const events = new EventEmitter()
-
 let metricsInterval, seekInterval
 let octokit
 let cursor = 0
@@ -71,6 +69,7 @@ function start (auth, {
 
   if (!octokit) {
     octokit = new Octokit({
+      // log: console,
       auth,
       userAgent: 'lakeboone v0.1.0',
       request: {}
@@ -97,7 +96,11 @@ function start (auth, {
   metricsInterval = setInterval(async function sendMetrics () {
     const rateLimit = await octokit.rest.rateLimit.get()
     const { limit, used, remaining } = rateLimit.data.resources.core
-    events.emit('metrics', {...metrics, limit, used, remaining})
+    const event = new CustomEvent("GitHub:ratelimit", {
+      detail: {...metrics, limit, used, remaining}
+    });
+    document.dispatchEvent(event);
+
     return sendMetrics
   }, 1000)
 }
@@ -105,7 +108,6 @@ function start (auth, {
 function stop () {
   clearInterval(metricsInterval)
   clearInterval(seekInterval)
-  events.removeAllListeners()
   metrics = {
     uniqueEvents: 0,
     prEvents: 0,
@@ -143,17 +145,16 @@ async function extractCandidate (results, { targetLanguages, showNonHireable }) 
       continue
     }
 
-    events.emit('candidate-found', {
-      includedLangs,
-      prHtmlUrl,
-      ...candidate
-    })
+    const event = new CustomEvent("GitHub:candidate-found", {
+      detail: {...candidate, includedLangs, prHtmlUrl}
+    });
+    document.dispatchEvent(event);
+
     metrics.candidatesFound++
   }
 }
 
 module.exports = {
-  events,
   start,
   stop
 }
