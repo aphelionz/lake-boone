@@ -15,11 +15,45 @@ let metrics = {
   candidatesFound: 0
 }
 
-function getNewEvents (ghEvents) {
-  const uniqueEvents = ghEvents.filter(d => parseInt(d.id, 10) > cursor)
-  // Update cursor to greatest known ID
-  cursor = ghEvents.map(e => parseInt(e.id, 10)).sort()[ghEvents.length - 1]
+function validate(data) {
+  if (!Array.isArray(data)) {
+    throw new Error('Invalid response data')
+  }
 
+  return Promise.resolve(data)
+}
+
+// The main data pipeline
+// 1. Get new events from GitHub
+// 2. Find events that are pull request merges
+// 3. Find pull requests that are suitable for further considerations
+// 4. Format the pull requests for the UI
+// 5. Extract candidates from the pull requests
+// 6. Emit the candidates
+function seek (options, octokit) {
+    const defaultParams = octokit.activity.listPublicEvents.endpoint.DEFAULTS || {}
+    defaultParams.url = `/events?per_page=100&${ new Date().getTime() }`
+
+    // TODO: response data validation
+    octokit.request(defaultParams)
+      .then(res => validate(res.data))
+      .then(eventStream => getUniqueEvents(eventStream, options))
+      .then(events => getPrMergeEvents(events, options))
+      .then(prMergeEvents => getSuitablePRs(prMergeEvents, options))
+      .then(pullRequests => filterLanguages(pullRequests, options))
+      .then(pullRequests => formatSuitablePRs(pullRequests, options))
+      .then((data) => extractCandidate(data, options))
+      .catch(console.error)
+
+    return seek
+}
+
+
+// Uses a cursor to only get new events since the last request
+let cursor = 0
+function getUniqueEvents (ghEvents) {
+  const uniqueEvents = ghEvents.filter(d => parseInt(d.id, 10) > cursor)
+  cursor = ghEvents.map(e => parseInt(e.id, 10)).sort()[ghEvents.length - 1]
   metrics.uniqueEvents += uniqueEvents.length
   return Promise.resolve(uniqueEvents)
 }
@@ -76,22 +110,7 @@ function start (auth, {
     })
   }
 
-  const defaultParams = octokit.activity.listPublicEvents.endpoint.DEFAULTS
-
-  seekInterval = setInterval((function seek () {
-    defaultParams.url = `/events?per_page=100&${ new Date().getTime() }`
-
-    octokit.request(defaultParams)
-      .then(res => res.data)
-      .then(getNewEvents)
-      .then(getPREvents)
-      .then(prEvents => getSuitablePRs(prEvents, { commentThreshold, changeSetThreshold }))
-      .then(formatSuitablePRs)
-      .then((data) => extractCandidate(data, { targetLanguages, showNonHireable }))
-      .catch(console.error)
-
-    return seek
-  })(), interval) // IIFE executes automatically
+  seekInterval = setInterval(() => seek(options, octokit), interval)
 
   metricsInterval = setInterval(async function sendMetrics () {
     const rateLimit = await octokit.rest.rateLimit.get()
