@@ -4,13 +4,15 @@ const { Octokit } = require('@octokit/rest')
 
 let metricsInterval, seekInterval
 let octokit
-let cursor = 0
 
 let metrics = {
   uniqueEvents: 0,
   prEvents: 0,
   suitablePRs: 0,
+  missBot: 0,
+  missCommentCount: 0,
   missIncludedLangs: 0,
+  missChangesetSize: 0,
   missNonHireable: 0,
   candidatesFound: 0
 }
@@ -58,48 +60,65 @@ function getUniqueEvents (ghEvents) {
   return Promise.resolve(uniqueEvents)
 }
 
-function getPREvents (newEvents) {
+function getPrMergeEvents (newEvents) {
   const prEvents = newEvents
     // Get merged pull requests
-    .filter(d => d.type === 'PullRequestEvent')
+    .filter(event => event.type === 'PullRequestEvent')
+    .filter(event => event.payload.action === 'closed')
+    .filter(pr => pr.payload.pull_request.merged)
 
   metrics.prEvents += prEvents.length
+
   return Promise.resolve(prEvents)
 }
 
 function getSuitablePRs (prEvents, { commentThreshold, changeSetThreshold }) {
-  const suitablePRs = prEvents
-    .filter(p => p.payload.action === 'closed')
-    .map(p => p.payload.pull_request)
-    .filter(pr => pr.merged)
-    .filter(pr => pr.review_comments >= commentThreshold)
-    // Make sure the PRs arent too big
-    .filter(pr => (pr.additions + pr.deletions) <= changeSetThreshold)
-    // We can add better bot detections it becomes an issue
-    .filter(pr => pr.user.login.indexOf('bot') === -1)
+  // Merged PRs only
+  const suitablePRs = prEvents.map(p => p.payload.pull_request)
 
-  metrics.suitablePRs += suitablePRs.length
-  return Promise.resolve(suitablePRs)
+  for (const pr of suitablePRs) {
+    // Make sure we're over our comment threshold
+    if (pr.review_comments < commentThreshold) {
+      pr.DELETE_ME = true
+      metrics.missCommentCount += 1
+      continue
+    }
+
+    // Make sure the PRs arent too big
+    if (pr.additions + pr.deletions > changeSetThreshold) {
+      pr.DELETE_ME = true
+      metrics.missChangesetSize += 1
+      continue
+    }
+
+    // We can add better bot detections it becomes an issue
+    if (pr.user.login.indexOf('bot') !== -1) {
+      pr.DELETE_ME = true
+      metrics.missBot += 1
+      continue
+    }
+
+    metrics.suitablePRs += 1
+  }
+
+  const filteredPRs = suitablePRs.filter(pr => !pr.DELETE_ME)
+  return Promise.resolve(filteredPRs)
 }
 
 async function formatSuitablePRs (suitablePRs) {
   const formattedPRs = suitablePRs.map(pr => ({
     prHtmlUrl: pr.html_url,
-    languagesUrl: pr.url.replace(/pulls(.*)$/g, 'languages'),
     username: pr.user.login
   }))
 
   return Promise.resolve(formattedPRs)
 }
 
-function start (auth, {
-  commentThreshold = 3,
-  changeSetThreshold = 5432,
-  showNonHireable = false,
-  targetLanguages
-} = {}) {
+function start (auth, options) {
   // 5000 authenticated requests/hour (rounded up) or 60 for non-auth :(
   const interval = auth ? 1000 : 60000
+
+  console.log('starting seeker')
 
   if (!octokit) {
     octokit = new Octokit({
@@ -138,9 +157,9 @@ function stop () {
   cursor = 0
 }
 
-async function extractCandidate (results, { targetLanguages, showNonHireable }) {
-  for (let i = 0; i < results.length; i++) {
-    const { languagesUrl, prHtmlUrl, username } = results[i]
+async function filterLanguages (pullRequests, { targetLanguages, showNonHireable }) {
+  for (let i = 0; i < pullRequests.length; i++) {
+    const languagesUrl = pullRequests[i].url.replace(/pulls(.*)$/g, 'languages')
 
     const repoRequest = await octokit.request(`GET ${languagesUrl}`)
     const repoLanguages = Object.keys(repoRequest.data).map(l => l.toLowerCase())
@@ -152,10 +171,23 @@ async function extractCandidate (results, { targetLanguages, showNonHireable }) 
       // TODO: Should be the languages in the PR, not the repo.
       if (repoLanguages[0] === lang || repoLanguages[1] === lang) includedLangs.push(lang)
     }
+
     if (includedLangs.length === 0) {
+      pullRequests[i].DELETE_ME = true
       metrics.missIncludedLangs++
       continue
     }
+  }
+
+  const filteredPullRequests = pullRequests.filter(pr => !pr.DELETE_ME)
+  return Promise.resolve(filteredPullRequests)
+}
+
+// This requires an Octokit request, so we'll save this for later on
+// in the pipeline when there are fewer data to process
+async function extractCandidate (results, { targetLanguages, showNonHireable }) {
+  for (let i = 0; i < results.length; i++) {
+    const { languagesUrl, prHtmlUrl, username } = results[i]
 
     const candidate = (await octokit.users.getByUsername({ username })).data
 
@@ -165,7 +197,7 @@ async function extractCandidate (results, { targetLanguages, showNonHireable }) 
     }
 
     const event = new CustomEvent("GitHub:candidate-found", {
-      detail: {...candidate, includedLangs, prHtmlUrl}
+      detail: {...candidate, prHtmlUrl}
     });
     document.dispatchEvent(event);
 

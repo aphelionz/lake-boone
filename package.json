@@ -8,9 +8,9 @@
   "main": "./src/index.js",
   "scripts": {
     "coverage": "nyc npm run test",
+    "cypress": "cypress open",
     "lint": "next lint && markdownlint *.md",
     "script:collect-langs": "node scripts/collect-languages.js",
-    "start:hunter": "node ./src/index.js",
     "test": "mocha -exit",
     "dev": "next dev",
     "build": "next build",
@@ -34,10 +34,11 @@
     "prom-client": "^14.2.0",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
-    "react-tag-autocomplete": "^7.0.0"
+    "react-tag-input": "^6.8.1"
   },
   "devDependencies": {
     "@octokit/fixtures": "^22.0.6",
+    "cypress": "^12.17.1",
     "eslint": "^8.45.0",
     "eslint-config-next": "^13.4.10",
     "markdownlint": "^0.29.0",

@@ -1,71 +1,51 @@
-import { useEffect, useState } from 'react'
+import { useContext, useEffect, useState } from 'react'
 import seeker from '../src/seeker.js'
 
-import CandidateList from '../components/CandidateList'
 import Sankey from '../components/Sankey'
+import { AuthContext } from '../components/Interface'
 
 export default function Seeker (props) {
-  const [candidates, setCandidates] = useState([])
-  const [started, setStarted] = useState(false)
-  const [metrics, setMetrics] = useState({
-    uniqueEvents: 0,
-    prEvents: 0,
-    suitablePRs: 0,
-    missIncludedLangs: 0,
-    missNonHireable: 0,
-    candidatesFound: 0,
-    limit: 0,
-    remaining: 0,
-    used: 0
-  })
+  const context = useContext(AuthContext)
 
-  function startSeeker (e) {
+  const isLoggedIn = context.accessToken !== null
+  const showNonHireable = props.showNonHireable || false
+  const targetLanguages = props.targetLanguages || 'C++,Rust,Go'
+  const commentThreshold = props.commentThreshold || 3
+  const changeSetThreshold = props.changeSetThreshold || 5432
+  const onCandidateFound = props.onCandidateFound || function (candidate) { console.log(candidate) }
+
+  const [started, setStarted] = useState(false)
+  const [metrics, setMetrics] = useState({})
+
+  useEffect(() => {
     if (started) return
 
     seeker.start(
-      e.detail.authToken,
+      context.accessToken,
       {
-        commentThreshold: parseInt(props.commentThreshold, 10),
-        showNonHireable: props.showNonHireable,
-        changeSetThreshold: props.changeSetThreshold,
-        targetLanguages: props.targetLanguages.split(',').map(l => l.toLowerCase())
+        commentThreshold: commentThreshold,
+        showNonHireable: showNonHireable,
+        changeSetThreshold: changeSetThreshold,
+        targetLanguages: targetLanguages.split(',').map(l => l.toLowerCase())
       }
     )
 
-    seeker.events.on('candidate-found', candidate => {
-      candidates.push(candidate)
-      setCandidates(candidates)
+    document.addEventListener('GitHub:ratelimit', e => {
+      const metrics = e.detail
+      setMetrics({ ...metrics })
     })
-    seeker.events.on('metrics', metrics => setMetrics({ ...metrics }))
+
+    document.addEventListener('GitHub:candidate-found', e => {
+      const candidate = e.detail
+      onCandidateFound(candidate)
+    })
     setStarted(true)
-  }
-
-  useEffect(() => {
-    document.addEventListener('GitHub:authToken', startSeeker)
-
-    return function cleanup () {
-      document.removeEventListener('GitHub:authToken', startSeeker)
-      if (started) {
-        seeker.stop()
-        setStarted(false)
-      }
-    }
   }, [started])
 
   return (
     <>
-      <h2>Candidates</h2>
-      <CandidateList candidates={candidates} />
-
-      <h2>Pipeline</h2>
-      <Sankey
-        uniqueEvents={metrics.uniqueEvents}
-        prEvents={metrics.prEvents}
-        suitablePRs={metrics.suitablePRs}
-        missIncludedLangs={metrics.missIncludedLangs}
-        missNonHireable={metrics.missNonHireable}
-        candidatesFound={metrics.candidatesFound}
-      />
+      <h3>Pipeline</h3>
+      <Sankey metrics={metrics} />
     </>
   )
 }

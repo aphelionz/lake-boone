@@ -1,7 +1,7 @@
 import { createOAuthAppAuth, createOAuthUserAuth } from '@octokit/auth-oauth-app'
 
-const CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET
-const CLIENT_ID = process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID
+const GITHUB_CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET
+const NEXT_PUBLIC_GITHUB_CLIENT_ID = process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID
 
 export default async function handler (req, res) {
   const response = {}
@@ -9,8 +9,8 @@ export default async function handler (req, res) {
   try {
     const appAuth = createOAuthAppAuth({
       clientType: "github-app",
-      clientId: CLIENT_ID,
-      clientSecret: CLIENT_SECRET,
+      clientId: NEXT_PUBLIC_GITHUB_CLIENT_ID,
+      clientSecret: GITHUB_CLIENT_SECRET,
     })
 
     const userAuth = await appAuth({
@@ -29,7 +29,7 @@ export default async function handler (req, res) {
     const refreshCookie = `refresh_token=${refreshToken};expires=${refreshExp};samesite=Strict;path=/`
 
     res.setHeader('Set-Cookie', [accessCookie, refreshCookie])
-    res.redirect('/')
+    res.redirect(307, '/login-redirect')
   } catch (err) {
     response.err = true
     response.message = err.message
