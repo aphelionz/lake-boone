@@ -9,7 +9,7 @@ export default function CandidateList (props) {
   // Handle undefined prop.candidates
   const candidates = props.candidates || [];
 
-  // Apply defaults
+  // Apply defaults to each candidate
   const hydratedCandidates = candidates.map(candidate => {
     const defaults = {
       avatar_url: 'https://github.com/identicons/unknown.png',
@@ -37,6 +37,8 @@ export default function CandidateList (props) {
 
   return (
     <>
+    <h3>Viable Candidates</h3>
+    { hydratedCandidates.length === 0 ? <div>No candidates found</div> : null }
     { uniqueCandidates.map(candidate => (
       <div key={candidate.login + candidate.prHtmlUrl} className="CandidateCard">
         <Image unoptimized src={candidate.avatar_url} alt='' width='120' height='120' />

@@ -99,12 +99,46 @@ a.logout {
   padding: 0.5em 0.5em;
 }
 .ReactTags__tagInputField:focus {
-  background: var(--black);
-  color: var(--white);
-  border: 1px solid var(--white);
+  background: black;
+  color: white;
+  border: 1px solid white;
 }
 .ReactTags__tagInput, .ReactTags__selected {
   display: inline;
+}
+
+.ReactTags__tagInput {
+  position: relative;
+}
+
+.ReactTags__suggestions {
+  position: absolute;
+  top: 1.5em;
+  left: 0;
+  background: black;
+  border: 1px solid var(--new-white);
+  width: 100%;
+}
+
+.ReactTags__suggestions ul {
+  margin: 0;
+  padding: 0;
+  list-style-type: none;
+  font-size: 0.75em;
+}
+
+.ReactTags__suggestions li {
+  margin: 0;
+  padding: 0.5em 0.5em;
+}
+
+.ReactTags__editInput {
+  border-radius: 1px dotted red;
+}
+
+.ReactTags__suggestions ul li.ReactTags__activeSuggestion {
+  background: var(--new-black);
+  cursor: pointer;
 }
 
 /*-----------------*/

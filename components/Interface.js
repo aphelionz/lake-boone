@@ -1,7 +1,6 @@
 import { createContext, useEffect, useState } from 'react'
 
 import Header from '../components/Header'
-import LanguageSelect from '../components/LanguageSelect'
 import CandidateList from '../components/CandidateList'
 import Seeker from '../components/Seeker'
 
@@ -13,6 +12,10 @@ export default function Interface (props) {
 
   const [candidates, setCandidates] = useState([])
 
+  function updateCandidates(newCandidate) {
+    setCandidates(candidates => [...candidates, newCandidate])
+  }
+
   if (!isLoggedIn) {
     return (
       <AuthContext.Provider value={context}>
@@ -21,27 +24,11 @@ export default function Interface (props) {
     )
   }
 
-  function updateCandidates(newCandidate) {
-    setCandidates(candidates => [...candidates, newCandidate])
-  }
-
-  function updateLanguage(language) {
-    console.log(language)
-  }
-
   return (
     <AuthContext.Provider value={context}>
       <Header />
-      <LanguageSelect onTagUpdate={updateLanguage}/>
-
-      <h3>Viable Candidates</h3>
       <CandidateList candidates={candidates} />
-
-      <Seeker
-        targetLanguages={"C++,Rust,Go"}
-        onCandidateFound={updateCandidates}
-      />
-
+      <Seeker onCandidateFound={updateCandidates}/>
     </AuthContext.Provider>
   );
 }
