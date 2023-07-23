@@ -9,7 +9,8 @@ export default function Seeker (props) {
 
   const isLoggedIn = context.accessToken !== null
   const showNonHireable = props.showNonHireable || false
-  const targetLanguages = props.targetLanguages.split(',').map(l => l.toLowerCase()) || 'C++,Rust,Go'
+  const targetLanguages = props.targetLanguages ?
+    props.targetLanguages.split(',').map(l => l.toLowerCase()) : 'C++,Rust,Go'
   const commentThreshold = props.commentThreshold || 3
   const changeSetThreshold = props.changeSetThreshold || 5432
   const onCandidateFound = props.onCandidateFound || console.log
