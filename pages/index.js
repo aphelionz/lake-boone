@@ -15,9 +15,9 @@ export const getServerSideProps = async (context) => {
   return {
     props: {
       context: {
-        redirectUri: process.env.REDIRECT_URI,
+        redirectUri: global.process.env.REDIRECT_URI,
         accessToken: context.req.cookies.access_token || null,
-        ghClientId: process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID,
+        ghClientId: global.process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID,
         languageList
       }
     }

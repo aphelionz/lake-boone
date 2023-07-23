@@ -1,7 +1,7 @@
 import { createOAuthAppAuth, createOAuthUserAuth } from '@octokit/auth-oauth-app'
 
-const GITHUB_CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET
-const NEXT_PUBLIC_GITHUB_CLIENT_ID = process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID
+const GITHUB_CLIENT_SECRET = global.process.env.GITHUB_CLIENT_SECRET
+const NEXT_PUBLIC_GITHUB_CLIENT_ID = global.process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID
 
 export default async function handler (req, res) {
   const response = {}
