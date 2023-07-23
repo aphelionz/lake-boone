@@ -4,12 +4,42 @@ import Link from 'next/link'
 import { useContext, useEffect, useState } from 'react'
 import AuthContext from '../components/Interface'
 
+// This component only responds to props changes
 export default function CandidateList (props) {
+  // Handle undefined prop.candidates
+  const candidates = props.candidates || [];
+
+  // Apply defaults
+  const hydratedCandidates = candidates.map(candidate => {
+    const defaults = {
+      avatar_url: 'https://github.com/identicons/unknown.png',
+      bio: 'No bio',
+      blog: '',
+      company: '',
+      html_url: '',
+      location: '',
+      login: 'unknown',
+      prHtmlUrl: '',
+      twitter_username: '',
+    }
+
+    return Object.assign(defaults, candidate)
+  })
+
+  // Get unique candidates
+  const uniqueCandidates = hydratedCandidates.reduce((acc, candidate) => {
+    const existingCandidate = acc.find(c => c.login === candidate.login)
+    if (!existingCandidate) {
+      acc.push(candidate)
+    }
+    return acc
+  }, [])
+
   return (
     <>
-    { props.candidates.map(candidate => (
+    { uniqueCandidates.map(candidate => (
       <div key={candidate.login + candidate.prHtmlUrl} className="CandidateCard">
-        <Image src={candidate.avatar_url} alt='' width='120' height='120' />
+        <Image unoptimized src={candidate.avatar_url} alt='' width='120' height='120' />
         <div className="CandidateCard__info">
           <h4><Link href={candidate.html_url}>{candidate.login}</Link></h4>
           <div>via <Link href={candidate.prHtmlUrl}>this pull request</Link></div>

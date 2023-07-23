@@ -21,10 +21,8 @@ export default function Interface (props) {
     )
   }
 
-  function updateCandidates(candidate) {
-    const newCandidates = [...candidates]
-    newCandidates.push(candidate)
-    setCandidates(newCandidates)
+  function updateCandidates(newCandidate) {
+    setCandidates(candidates => [...candidates, newCandidate])
   }
 
   function updateLanguage(language) {

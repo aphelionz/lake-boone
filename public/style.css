@@ -130,6 +130,7 @@ a.logout {
 .CandidateCard__info {
   font-size: 0.8em;
   margin-left: 90px;
+  min-height: 100px;
 }
 
 .CandidateCard__info > h4 {

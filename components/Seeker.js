@@ -9,10 +9,10 @@ export default function Seeker (props) {
 
   const isLoggedIn = context.accessToken !== null
   const showNonHireable = props.showNonHireable || false
-  const targetLanguages = props.targetLanguages || 'C++,Rust,Go'
+  const targetLanguages = props.targetLanguages.split(',').map(l => l.toLowerCase()) || 'C++,Rust,Go'
   const commentThreshold = props.commentThreshold || 3
   const changeSetThreshold = props.changeSetThreshold || 5432
-  const onCandidateFound = props.onCandidateFound || function (candidate) { console.log(candidate) }
+  const onCandidateFound = props.onCandidateFound || console.log
 
   const [started, setStarted] = useState(false)
   const [metrics, setMetrics] = useState({})
@@ -22,12 +22,7 @@ export default function Seeker (props) {
 
     seeker.start(
       context.accessToken,
-      {
-        commentThreshold: commentThreshold,
-        showNonHireable: showNonHireable,
-        changeSetThreshold: changeSetThreshold,
-        targetLanguages: targetLanguages.split(',').map(l => l.toLowerCase())
-      }
+      { commentThreshold, showNonHireable, changeSetThreshold, targetLanguages }
     )
 
     document.addEventListener('GitHub:ratelimit', e => {
