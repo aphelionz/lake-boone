@@ -58,12 +58,9 @@ export default function Seeker (props) {
     { id: 'Rust', text: 'Rust' },
     { id: 'C++', text: 'C++' },
   ])
-  const [suggestions, setSuggestions] = useState([
-    { id: 'Go', text: 'Go' },
-    { id: 'Rust', text: 'Rust' },
-    { id: 'C++', text: 'C++' },
-    { id: 'Python', text: 'Python' },
-  ])
+
+  const languages = context.languageList.map(l => ({ id: l, text: l }))
+  const [suggestions, setSuggestions] = useState(languages || [])
 
   function handleTagAddition (newTag) {
     setTags(tags => [...tags, newTag])
