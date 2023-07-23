@@ -66,7 +66,7 @@ export async function filterLanguages (pullRequests, octokit, { targetLanguages,
     const languagesUrl = pullRequests[i].url.replace(/pulls(.*)$/g, 'languages')
 
     const repoRequest = await octokit.request(`GET ${languagesUrl}`)
-    const repoLanguages = Object.keys(repoRequest.data).map(l => l.toLowerCase())
+    const repoLanguages = Object.keys(repoRequest.data)
     // TODO: Introduce Set
     const includedLangs = []
 
@@ -89,9 +89,9 @@ export async function filterLanguages (pullRequests, octokit, { targetLanguages,
 
 // This requires an Octokit request, so we'll save this for later on
 // in the pipeline when there are fewer data to process
-export async function extractCandidate (formattedPRs, { targetLanguages, showNonHireable }, metrics) {
+export async function extractCandidate (formattedPRs, octokit, { targetLanguages, showNonHireable }, metrics) {
   for (let i = 0; i < formattedPRs.length; i++) {
-    const { languagesUrl, prHtmlUrl, username } = results[i]
+    const { languagesUrl, prHtmlUrl, username } = formattedPRs[i]
 
     const candidate = (await octokit.users.getByUsername({ username })).data
 

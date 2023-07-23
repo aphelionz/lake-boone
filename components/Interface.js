@@ -12,8 +12,8 @@ export default function Interface (props) {
 
   const [candidates, setCandidates] = useState([])
 
-  function updateCandidates(newCandidate) {
-    setCandidates(candidates => [...candidates, newCandidate])
+  function updateCandidates(newCandidates) {
+    setCandidates(candidates => [...newCandidates])
   }
 
   if (!isLoggedIn) {

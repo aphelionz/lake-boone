@@ -18,6 +18,7 @@ export function seek (options, octokit) {
   defaultParams.url = `/events?per_page=100&${ new Date().getTime() }`
   
   const metrics = {
+    candidates: [],
     uniqueEvents: 0,
     prEvents: 0,
     suitablePRs: 0,
@@ -36,7 +37,7 @@ export function seek (options, octokit) {
     .then(({prMergeEvents, metrics}) => getSuitablePRs(prMergeEvents, options, metrics))
     .then(({filteredPRs, metrics}) => filterLanguages(filteredPRs, octokit, options, metrics))
     .then(({filteredPRs, metrics}) => formatSuitablePRs(filteredPRs, options, metrics))
-    .then(({formattedPRs, metrics}) => extractCandidate(formattedPRs, options, metrics))
+    .then(({formattedPRs, metrics}) => extractCandidate(formattedPRs, octokit, options, metrics))
     .catch(console.error)
 }
 
@@ -44,13 +45,12 @@ export default function Seeker (props) {
   const context = useContext(AuthContext)
 
   const isLoggedIn = context.accessToken !== null
-  const showNonHireable = props.showNonHireable || false
-  const targetLanguages = props.targetLanguages ?
-    props.targetLanguages.split(',').map(l => l.toLowerCase()) : 'C++,Rust,Go'
-  const commentThreshold = props.commentThreshold || 3
   const changeSetThreshold = props.changeSetThreshold || 5432
   const onCandidateFound = props.onCandidateFound || console.log
 
+  const [candidates, setCandidates] = useState([])
+  const [commentThreshold, setCommentThreshold] = useState(3)
+  const [showNonHireable, setShowNonHireable] = useState(false)
   const [started, setStarted] = useState(false)
   const [metrics, setMetrics] = useState({})
   const [tags, setTags] = useState([
@@ -73,7 +73,6 @@ export default function Seeker (props) {
   }
 
   useEffect(() => {
-    console.log('Seeker.js: useEffect')
     const octokit = new Octokit({
       auth: context.accessToken,
       userAgent: 'lakeboone v0.3.0',
@@ -82,12 +81,19 @@ export default function Seeker (props) {
 
     const interval = context.accessToken ? 1000 : 60000
     const seekInterval = setInterval(async () => {
+      const targetLanguages = tags.map(t => t.id)
+
       const results = await seek({
         targetLanguages,
         showNonHireable,
         commentThreshold,
         changeSetThreshold
-      }, octokit, metrics);
+      }, octokit, metrics) || {}
+
+      const newCandidates = results.candidates || []
+      setCandidates(candidates => candidates.concat(newCandidates))
+      if(candidates.length > 0) { props.onCandidateFound(candidates) }
+      delete results.candidates
 
       Object.keys(results).forEach(key => {
         const originalValue = metrics[key] || 0
@@ -96,17 +102,16 @@ export default function Seeker (props) {
 
       const rateLimit = await octokit.rest.rateLimit.get()
       const { limit, used, remaining } = rateLimit.data.resources.core
-      setMetrics({...metrics, limit, used, remaining})
+      setMetrics({...metrics, candidates, limit, used, remaining})
     }, interval);
 
     setStarted(true)
 
     return function cleanup() {
-      console.log('Seeker.js: cleanup')
       clearInterval(seekInterval)
       setStarted(false)
     }
-  }, [started])
+  }, [started, tags, showNonHireable, commentThreshold, candidates])
 
   return (
     <>
@@ -124,9 +129,26 @@ export default function Seeker (props) {
         onTagUpdate = {props.onTagUpdate}
         inputFieldPosition="bottom"
       />
+      <label>
+        Show Non-Hireable
+        <input type="checkbox"
+          checked={showNonHireable}
+          onChange={e => setShowNonHireable(e.target.checked)}
+        />
+      </label>
       <br />
-      <Sankey metrics={metrics} />
-      { metrics.limit } { metrics.used } { metrics.remaining }
+      <label>
+        Comment Threshold
+        <input type="number"
+          value={commentThreshold}
+          onChange={e => setCommentThreshold(e.target.value)}
+        />
+      </label>
+      <br />
+      <Sankey commentThreshold={commentThreshold} metrics={metrics} />
+      <small>
+        Limit: { metrics.limit } Used: { metrics.used } Remaining: { metrics.remaining }
+      </small>
     </>
   )
 }

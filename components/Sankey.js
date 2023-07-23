@@ -10,6 +10,7 @@ export default function Sankey (props) {
 
     // default values
     const metrics = props.metrics || {}
+    const candidates = metrics.candidates || []
     const uniqueEvents = metrics.uniqueEvents || 0
     const prEvents = metrics.prEvents || 0
     const discardedEvents = uniqueEvents - prEvents
@@ -48,13 +49,13 @@ export default function Sankey (props) {
             uniqueEvents: `Event Feed (${uniqueEvents})`,
             discardedEvents: `Discarded (${discardedEvents})`,
             prMergeEvents: `Merged Pull Requests (${prEvents})`,
-            missedCommentCount: `Not enough comments (${missedCommentCount})`,
+            missedCommentCount: `Less than ${props.commentThreshold} comments (${missedCommentCount})`,
             missedPRSize: `Oversized PR (${missedPRSize})`,
             suitablePRs: `Potential Candidates (${suitablePRs})`,
             missedIncludedLangs: `Wrong Language (${missedIncludedLangs})`,
             missedNonHireable: `Not Hireable (${missedNonHireable})`,
             missBot: `Bot (${missBot})`,
-            candidatesFound: `Viable (${candidatesFound})`
+            candidatesFound: `Viable (${candidates.length})`
           }
         }]
       },
